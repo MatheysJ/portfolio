@@ -1,14 +1,14 @@
 import React from "react";
 import { FACES } from "@/constants/faces";
-import { EXPERIENCE } from "@/constants/content";
-import { Flex, List, Text } from "@chakra-ui/react";
+import { EXPERIENCE, WORK_STYLE } from "@/constants/content";
+import { Box, Flex, List, Text } from "@chakra-ui/react";
 
 import { CubeExperiencesProps } from "./types";
 import { CubeFace } from "..";
 
 const Experiences: React.FC<CubeExperiencesProps> = (props) => (
   <CubeFace {...props} face={FACES.RIGHT} title="EXPERIÊNCIA">
-    <Flex direction="column" gap="3">
+    <Flex direction="column" gap="4">
       <Flex direction="column">
         <Text color="teal.400">
           {EXPERIENCE.company}{" "}
@@ -17,18 +17,50 @@ const Experiences: React.FC<CubeExperiencesProps> = (props) => (
           </Text>
         </Text>
         <Text>{EXPERIENCE.role}</Text>
-        <Text color="whiteAlpha.600">{EXPERIENCE.period}</Text>
+        <Text color="whiteAlpha.600">
+          {EXPERIENCE.period} · {EXPERIENCE.note}
+        </Text>
       </Flex>
 
-      <List.Root gap="1.5" ps="4" listStyleType="square">
-        {EXPERIENCE.highlights.map((highlight) => (
-          <List.Item key={highlight} _marker={{ color: "teal.400" }}>
-            {highlight}
-          </List.Item>
-        ))}
-      </List.Root>
+      {EXPERIENCE.works.map(({ title, stack, text, metric }) => (
+        <Flex
+          key={title}
+          direction="column"
+          gap="1"
+          borderLeft="2px solid"
+          borderColor="teal.700"
+          ps="2.5"
+        >
+          <Text color="teal.400">{title}</Text>
+          <Text fontSize="0.85em" color="whiteAlpha.600">
+            {stack}
+          </Text>
+          <Text>{text}</Text>
+          {metric && (
+            <Box mt="1">
+              <Text color="teal.300" fontSize="1.15em">
+                {metric.value}
+              </Text>
+              <Text fontSize="0.85em" color="whiteAlpha.700">
+                {metric.detail}
+              </Text>
+            </Box>
+          )}
+        </Flex>
+      ))}
 
-      <Text color="whiteAlpha.700">{EXPERIENCE.practices}</Text>
+      <Flex direction="column" gap="1">
+        <Text color="teal.400" fontSize="0.85em">
+          Como trabalho
+        </Text>
+        <List.Root gap="1" ps="4" listStyleType="square">
+          {WORK_STYLE.map((item) => (
+            <List.Item key={item} _marker={{ color: "teal.400" }}>
+              {item}
+            </List.Item>
+          ))}
+        </List.Root>
+      </Flex>
     </Flex>
   </CubeFace>
 );

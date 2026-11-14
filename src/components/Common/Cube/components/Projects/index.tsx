@@ -1,46 +1,53 @@
 import React from "react";
-import { Box, Flex, List, Text } from "@chakra-ui/react";
+import { Flex, Link, Text } from "@chakra-ui/react";
 import { FACES } from "@/constants/faces";
-import { CASE_STUDY, PROJECTS } from "@/constants/content";
+import { PERSONAL_PROJECT } from "@/constants/content";
+import { Chip } from "@/components/Common";
 
 import { CubeProjectsProps } from "./types";
 import { CubeFace } from "..";
 
-const Projects: React.FC<CubeProjectsProps> = (props) => (
-  <CubeFace {...props} face={FACES.TOP} title="PROJETOS">
-    <Flex direction="column" gap="4">
-      {PROJECTS.map(({ title, role, points }) => (
-        <Flex key={title} direction="column" gap="1">
-          <Text color="teal.400">{title}</Text>
-          <Text color="whiteAlpha.700">{role}</Text>
-          <List.Root ps="4" gap="0.5" listStyleType="square">
-            {points.map((point) => (
-              <List.Item key={point} _marker={{ color: "teal.400" }}>
-                {point}
-              </List.Item>
-            ))}
-          </List.Root>
-        </Flex>
-      ))}
+const Projects: React.FC<CubeProjectsProps> = (props) => {
+  const { title, description, stack, recognition, link } = PERSONAL_PROJECT;
 
-      <Flex direction="column" gap="1.5">
-        <Text color="teal.400">
-          <Text as="span" color="whiteAlpha.600">
-            Case ·{" "}
-          </Text>
-          {CASE_STUDY.title}
-        </Text>
-        {CASE_STUDY.steps.map(({ label, text }) => (
-          <Box key={label} borderLeft="2px solid" borderColor="teal.700" ps="2.5">
-            <Text fontSize="0.85em" color="whiteAlpha.600">
-              {label}
+  return (
+    <CubeFace {...props} face={FACES.TOP} title="PROJETOS">
+      <Flex direction="column" gap="3">
+        <Flex direction="column">
+          <Text color="teal.400">
+            {title}{" "}
+            <Text as="span" color="whiteAlpha.600">
+              · projeto pessoal
             </Text>
-            <Text>{text}</Text>
-          </Box>
-        ))}
+          </Text>
+          <Text>{description}</Text>
+        </Flex>
+
+        <Flex as="ul" wrap="wrap" gap="1.5">
+          {stack.map((item) => (
+            <Chip key={item}>{item}</Chip>
+          ))}
+        </Flex>
+
+        <Text color="whiteAlpha.800">{recognition}</Text>
+
+        <Flex direction="column">
+          <Text fontSize="0.85em" color="teal.400">
+            Código
+          </Text>
+          <Link
+            href={link.href}
+            target="_blank"
+            rel="noreferrer"
+            color="inherit"
+            _hover={{ color: "teal.300" }}
+          >
+            {link.label}
+          </Link>
+        </Flex>
       </Flex>
-    </Flex>
-  </CubeFace>
-);
+    </CubeFace>
+  );
+};
 
 export default Projects;

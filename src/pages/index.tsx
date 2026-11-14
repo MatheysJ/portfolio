@@ -20,7 +20,7 @@ export default function Home() {
     <>
       <Head>
         <title>Matheus Júnior · Software Engineer</title>
-        <meta name="description" content="Matheus Júnior, Engenheiro de Software Full Stack: React, Next.js, Java e Spring Boot." />
+        <meta name="description" content="Matheus Júnior, Engenheiro de Software Full Stack em e-commerce: React, Next.js, TypeScript, Java/Spring Boot e Node.js/NestJS." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
