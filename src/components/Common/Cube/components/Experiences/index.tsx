@@ -18,8 +18,9 @@ const Experiences: React.FC<CubeExperiencesProps> = (props) => (
         </Text>
         <Text>{EXPERIENCE.role}</Text>
         <Text color="whiteAlpha.600">
-          {EXPERIENCE.period} · {EXPERIENCE.note}
+          {EXPERIENCE.period} · {EXPERIENCE.workModel}
         </Text>
+        <Text color="whiteAlpha.600">{EXPERIENCE.note}</Text>
       </Flex>
 
       {EXPERIENCE.works.map(({ title, stack, text, metric }) => (

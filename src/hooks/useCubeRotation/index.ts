@@ -3,21 +3,12 @@ import { FACES, FACES_DATA, RING_ORDER } from "@/constants/faces";
 import { DIRECTIONS, KEY_TO_DIRECTION } from "@/constants/directions";
 import { Coordinate } from "@/types";
 
-/** Tempo em que o cubo fica "recuado" no início de um giro. */
 const TURN_FEEDBACK_MS = 320;
-/** Distância mínima (px) para um ponteiro ser considerado arraste e não clique. */
 const DRAG_THRESHOLD_PX = 6;
-/** Arraste mínimo (graus) para trocar de face mesmo sem passar da metade. */
 const FLICK_THRESHOLD_DEG = 15;
 
 const mod = (value: number, base: number) => ((value % base) + base) % base;
 
-/**
- * A rotação é exposta como variáveis CSS e aplicada em cada face, não no
- * elemento do cubo. Se o próprio cubo girasse, em 90° o plano dele ficaria de
- * perfil para a tela (matriz não inversível) e o navegador deixaria de
- * entregar cliques às faces laterais, ao topo e à base.
- */
 export const ROTATION_VARS = { x: "--cube-rotate-y", y: "--cube-rotate-x" };
 
 export const toRotationVars = ({ x, y }: Coordinate) => ({
@@ -36,14 +27,12 @@ export const getActiveFace = ({ x, y }: Coordinate): FACES => {
   return RING_ORDER[mod(Math.round(-x / 90), RING_ORDER.length)];
 };
 
-/** Calcula a rotação até a face desejada pelo caminho mais curto. */
 export const getCoordinateTo = (
   face: FACES,
   current: Coordinate,
 ): Coordinate => {
   const target = FACES_DATA[face].coordinate;
 
-  // Topo e base: apenas inclina, mantendo o giro horizontal atual.
   if (target.y !== 0) return { x: current.x, y: target.y };
 
   const delta = mod(target.x - current.x + 180, 360) - 180;
@@ -59,15 +48,13 @@ export const getCoordinateAfterTurn = (
 
   switch (direction) {
     case DIRECTIONS.LEFT:
-      return isOnRing ? { ...current, x: current.x + 90 } : current;
+      return { ...current, x: current.x + 90 };
     case DIRECTIONS.RIGHT:
-      return isOnRing ? { ...current, x: current.x - 90 } : current;
+      return { ...current, x: current.x - 90 };
     case DIRECTIONS.UP:
-      if (isOnRing) return getCoordinateTo(FACES.TOP, current);
-      return face === FACES.BOTTOM ? { ...current, y: 0 } : current;
+      return { ...current, y: current.y - 90 };
     case DIRECTIONS.DOWN:
-      if (isOnRing) return getCoordinateTo(FACES.BOTTOM, current);
-      return face === FACES.TOP ? { ...current, y: 0 } : current;
+      return { ...current, y: current.y + 90 };
   }
 };
 
@@ -78,20 +65,16 @@ const isTypingTarget = (target: EventTarget | null) =>
 
 interface DragState {
   pointerId: number;
+  size: number;
   startX: number;
   baseX: number;
   currentX: number;
   isDragging: boolean;
 }
 
-const useCubeRotation = (size: number) => {
+const useCubeRotation = () => {
   const [coordinate, setCoordinate] = useState<Coordinate>({ x: 0, y: 0 });
   const [isTurning, setIsTurning] = useState(false);
-  /*
-   * Ângulo aplicado ao conteúdo do topo e da base para que fiquem "em pé"
-   * vindo de qualquer face do anel. É atualizado só no momento em que se sai
-   * do anel: nesse instante topo e base estão de perfil, então a troca é invisível.
-   */
   const [capAngle, setCapAngle] = useState(0);
 
   const cubeRef = useRef<HTMLDivElement>(null);
@@ -144,15 +127,12 @@ const useCubeRotation = (size: number) => {
 
   useEffect(() => () => clearTimeout(turnTimeoutRef.current), []);
 
-  /*
-   * Durante o arraste o transform é aplicado direto no DOM: evita re-render
-   * das seis faces a cada movimento do ponteiro e mantém 60fps.
-   */
   const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
     if (event.button !== 0 || coordinateRef.current.y !== 0) return;
 
     dragRef.current = {
       pointerId: event.pointerId,
+      size: Math.max(event.currentTarget.getBoundingClientRect().width, 1),
       startX: event.clientX,
       baseX: coordinateRef.current.x,
       currentX: coordinateRef.current.x,
@@ -174,11 +154,10 @@ const useCubeRotation = (size: number) => {
       event.currentTarget.setPointerCapture(event.pointerId);
       event.currentTarget.dataset.dragging = "true";
       window.getSelection()?.removeAllRanges();
-      // Desliga a transição das faces enquanto seguem o ponteiro.
       cube.dataset.dragging = "true";
     }
 
-    drag.currentX = drag.baseX + (deltaPx / size) * 110;
+    drag.currentX = drag.baseX + (deltaPx / drag.size) * 110;
     applyRotationVars(cube, { x: drag.currentX, y: 0 });
   };
 
@@ -199,7 +178,6 @@ const useCubeRotation = (size: number) => {
     }
     const target = { x: drag.baseX + steps * 90, y: 0 };
 
-    // Devolve o controle da transição ao CSS a partir da posição arrastada.
     const cube = cubeRef.current;
     if (cube) {
       delete cube.dataset.dragging;

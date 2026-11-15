@@ -11,23 +11,50 @@ export enum FACES {
 
 interface FaceData {
   label: string;
-  /** Rotação do cubo que deixa esta face voltada para o usuário. */
+  slug: string;
   coordinate: Coordinate;
 }
 
 export const FACES_DATA: Record<FACES, FaceData> = {
-  [FACES.FRONT]: { label: "Início", coordinate: { x: 0, y: 0 } },
-  [FACES.RIGHT]: { label: "Experiência", coordinate: { x: -90, y: 0 } },
-  [FACES.BACK]: { label: "Stack", coordinate: { x: 180, y: 0 } },
-  [FACES.LEFT]: { label: "Contato", coordinate: { x: 90, y: 0 } },
-  [FACES.TOP]: { label: "Projetos", coordinate: { x: 0, y: -90 } },
-  [FACES.BOTTOM]: { label: "Formação", coordinate: { x: 0, y: 90 } },
+  [FACES.FRONT]: {
+    label: "Início",
+    slug: "inicio",
+    coordinate: { x: 0, y: 0 },
+  },
+  [FACES.RIGHT]: {
+    label: "Experiência",
+    slug: "experiencia",
+    coordinate: { x: -90, y: 0 },
+  },
+  [FACES.BACK]: {
+    label: "Stack",
+    slug: "stack",
+    coordinate: { x: 180, y: 0 },
+  },
+  [FACES.LEFT]: {
+    label: "Contato",
+    slug: "contato",
+    coordinate: { x: 90, y: 0 },
+  },
+  [FACES.TOP]: {
+    label: "Projetos",
+    slug: "projetos",
+    coordinate: { x: 0, y: -90 },
+  },
+  [FACES.BOTTOM]: {
+    label: "Formação",
+    slug: "formacao",
+    coordinate: { x: 0, y: 90 },
+  },
 };
 
-/** Faces do "anel" horizontal, na ordem em que aparecem girando para a direita. */
+export const getFaceBySlug = (slug: string): FACES | undefined =>
+  (Object.keys(FACES_DATA) as FACES[]).find(
+    (face) => FACES_DATA[face].slug === slug,
+  );
+
 export const RING_ORDER = [FACES.FRONT, FACES.RIGHT, FACES.BACK, FACES.LEFT];
 
-/** Ordem de leitura usada na navegação abaixo do cubo. */
 export const NAV_ORDER = [
   FACES.FRONT,
   FACES.RIGHT,

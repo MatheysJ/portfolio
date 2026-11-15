@@ -5,12 +5,16 @@
  */
 
 export const PROFILE = {
-  name: "MATHEUS JÚNIOR",
+  name: "MATHEUS J.",
+  displayName: "Matheus J.",
   role: "SOFTWARE ENGINEER",
+  jobTitle: "Engenheiro de Software Full Stack",
   headline: "Full Stack · E-commerce · Microsserviços",
   summary:
     "Mais de 4 anos em e-commerce. Front-end com React, Next.js e TypeScript; back-end com Java/Spring Boot e Node.js/NestJS, em arquitetura de microsserviços.",
   location: "Campinas, SP",
+  workModel: "Remoto ou híbrido",
+  address: { locality: "Campinas", region: "SP", country: "BR" },
 };
 
 export const CONTACT = {
@@ -30,6 +34,7 @@ export const EXPERIENCE = {
   companyNote: "AI/R Company",
   role: "Engenheiro de Software Full Stack",
   period: "mar 2022 – set 2026",
+  workModel: "Remoto",
   note: "Entrada pelo programa de estágio, com efetivação.",
   works: [
     {
@@ -74,7 +79,10 @@ export const PERSONAL_PROJECT = {
   ],
   recognition:
     "Uma versão inicial foi tema do meu TCC e de um resumo expandido apresentado na 14ª Jornada Científica e Tecnológica da FATEC Botucatu (2025).",
-  link: CONTACT.github,
+  link: {
+    label: "github.com/MatheysJ/cube-gateway",
+    href: "https://github.com/MatheysJ/cube-gateway",
+  },
 };
 
 export const STACK = [
@@ -108,7 +116,8 @@ export const EDUCATION = [
   {
     title: "Pós-graduação em Microeletrônica",
     place: "Unicamp",
-    period: "Em andamento · bolsista",
+    period:
+      "Em andamento · bolsista, em paralelo ao desenvolvimento de software",
   },
   {
     title: "Análise e Desenvolvimento de Sistemas",

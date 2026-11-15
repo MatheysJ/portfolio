@@ -1,5 +1,11 @@
 import React from "react";
-import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+} from "@testing-library/react";
 import { FACES } from "@/constants/faces";
 import { DIRECTIONS } from "@/constants/directions";
 
@@ -12,7 +18,6 @@ import useCubeRotation, {
 
 const SIZE = 500;
 
-// jsdom não implementa PointerEvent nem pointer capture.
 class PointerEventPolyfill extends MouseEvent {
   pointerId: number;
 
@@ -45,7 +50,10 @@ describe("getActiveFace", () => {
 
 describe("getCoordinateTo", () => {
   it("gira pelo caminho mais curto até uma face do anel", () => {
-    expect(getCoordinateTo(FACES.LEFT, { x: 0, y: 0 })).toEqual({ x: 90, y: 0 });
+    expect(getCoordinateTo(FACES.LEFT, { x: 0, y: 0 })).toEqual({
+      x: 90,
+      y: 0,
+    });
     expect(getCoordinateTo(FACES.RIGHT, { x: 0, y: 0 })).toEqual({
       x: -90,
       y: 0,
@@ -82,7 +90,10 @@ describe("getCoordinateAfterTurn", () => {
   const bottom = { x: 0, y: 90 };
 
   it("gira 90° na horizontal enquanto está no anel", () => {
-    expect(getCoordinateAfterTurn(DIRECTIONS.LEFT, ring)).toEqual({ x: 90, y: 0 });
+    expect(getCoordinateAfterTurn(DIRECTIONS.LEFT, ring)).toEqual({
+      x: 90,
+      y: 0,
+    });
     expect(getCoordinateAfterTurn(DIRECTIONS.RIGHT, ring)).toEqual({
       x: -90,
       y: 0,
@@ -112,14 +123,14 @@ describe("useCubeRotation", () => {
   afterEach(() => jest.useRealTimers());
 
   it("começa na face frontal", () => {
-    const { result } = renderHook(() => useCubeRotation(SIZE));
+    const { result } = renderHook(() => useCubeRotation());
 
     expect(result.current.activeFace).toBe(FACES.FRONT);
     expect(result.current.isTurning).toBe(false);
   });
 
   it("marca o giro em andamento e libera após o feedback", () => {
-    const { result } = renderHook(() => useCubeRotation(SIZE));
+    const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.turn(DIRECTIONS.RIGHT));
     expect(result.current.activeFace).toBe(FACES.RIGHT);
@@ -130,14 +141,14 @@ describe("useCubeRotation", () => {
   });
 
   it("não dispara giro quando a posição não muda", () => {
-    const { result } = renderHook(() => useCubeRotation(SIZE));
+    const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.goTo(FACES.FRONT));
     expect(result.current.isTurning).toBe(false);
   });
 
   it("ajusta o conteúdo do topo conforme a face de origem", () => {
-    const { result } = renderHook(() => useCubeRotation(SIZE));
+    const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.goTo(FACES.RIGHT));
     act(() => result.current.turn(DIRECTIONS.UP));
@@ -147,7 +158,7 @@ describe("useCubeRotation", () => {
   });
 
   it("responde às setas do teclado", () => {
-    const { result } = renderHook(() => useCubeRotation(SIZE));
+    const { result } = renderHook(() => useCubeRotation());
 
     act(() => {
       fireEvent.keyDown(window, { key: "ArrowLeft" });
@@ -161,7 +172,7 @@ describe("useCubeRotation", () => {
   });
 
   it("ignora o teclado com modificadores ou em campos de texto", () => {
-    const { result } = renderHook(() => useCubeRotation(SIZE));
+    const { result } = renderHook(() => useCubeRotation());
     const input = document.createElement("input");
     document.body.appendChild(input);
 
@@ -179,7 +190,7 @@ describe("useCubeRotation · arraste", () => {
   const onChildClick = jest.fn();
 
   const DragHarness = () => {
-    const { activeFace, cubeRef, dragHandlers } = useCubeRotation(SIZE);
+    const { activeFace, cubeRef, dragHandlers } = useCubeRotation();
 
     return (
       <div data-testid="container" {...dragHandlers}>
@@ -198,7 +209,14 @@ describe("useCubeRotation · arraste", () => {
     fireEvent.pointerUp(container, { clientX: toX });
   };
 
-  beforeEach(() => onChildClick.mockClear());
+  beforeEach(() => {
+    onChildClick.mockClear();
+    jest
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({ width: SIZE, height: SIZE } as DOMRect);
+  });
+
+  afterEach(() => jest.restoreAllMocks());
 
   it("troca de face ao arrastar mais da metade", () => {
     render(<DragHarness />);

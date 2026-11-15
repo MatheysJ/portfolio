@@ -3,16 +3,16 @@ import {
   Faceable,
   Paintable,
   RotationController,
-  Sized,
 } from "@/types";
 
 export interface CubeFaceProps
   extends ChildrenAsProps,
-    Sized,
     Paintable,
     Faceable,
     RotationController {
   title?: string;
+  /** Nível semântico do título (a face inicial usa h1). */
+  titleAs?: "h1" | "h2";
 }
 
-export type CubeFaceContentProps = Sized & Paintable & RotationController;
+export type CubeFaceContentProps = Paintable & RotationController;

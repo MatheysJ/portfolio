@@ -14,20 +14,28 @@ const CubeNav: React.FC<CubeNavProps> = ({ activeFace, onSelect }) => (
   >
     {NAV_ORDER.map((face) => {
       const isActive = face === activeFace;
+      const { label, slug } = FACES_DATA[face];
 
       return (
         <Button
           key={face}
+          asChild
           size="sm"
           variant={isActive ? "solid" : "ghost"}
           colorPalette="teal"
-          // Preto sobre teal claro: contraste AA (o branco sobre teal.600 não atinge).
-          {...(isActive && { bg: "teal.300", color: "black" })}
           fontFamily="inherit"
-          aria-current={isActive ? "page" : undefined}
-          onClick={() => onSelect(face)}
+          {...(isActive && { bg: "teal.300", color: "black" })}
         >
-          {FACES_DATA[face].label}
+          <a
+            href={`#${slug}`}
+            aria-current={isActive ? "location" : undefined}
+            onClick={(event) => {
+              event.preventDefault();
+              onSelect(face);
+            }}
+          >
+            {label}
+          </a>
         </Button>
       );
     })}

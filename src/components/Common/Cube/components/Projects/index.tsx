@@ -6,6 +6,27 @@ import { Chip } from "@/components/Common";
 
 import { CubeProjectsProps } from "./types";
 import { CubeFace } from "..";
+import { useFaceFocus } from "../Face/context";
+
+const ProjectLink: React.FC<{ href: string; label: string }> = ({
+  href,
+  label,
+}) => {
+  const focus = useFaceFocus();
+
+  return (
+    <Link
+      {...focus}
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      color="inherit"
+      _hover={{ color: "teal.300" }}
+    >
+      {label}
+    </Link>
+  );
+};
 
 const Projects: React.FC<CubeProjectsProps> = (props) => {
   const { title, description, stack, recognition, link } = PERSONAL_PROJECT;
@@ -33,17 +54,9 @@ const Projects: React.FC<CubeProjectsProps> = (props) => {
 
         <Flex direction="column">
           <Text fontSize="0.85em" color="teal.400">
-            Código
+            Código (gateway)
           </Text>
-          <Link
-            href={link.href}
-            target="_blank"
-            rel="noreferrer"
-            color="inherit"
-            _hover={{ color: "teal.300" }}
-          >
-            {link.label}
-          </Link>
+          <ProjectLink href={link.href} label={link.label} />
         </Flex>
       </Flex>
     </CubeFace>

@@ -1,6 +1,6 @@
 import { CubeRotation } from "@/hooks";
-import { Paintable, Sized } from "@/types";
+import { Paintable } from "@/types";
 
-export interface CubeProps extends Sized, Paintable {
+export interface CubeProps extends Paintable {
   rotation: CubeRotation;
 }

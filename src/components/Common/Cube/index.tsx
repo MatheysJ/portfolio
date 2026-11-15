@@ -13,7 +13,7 @@ import {
 import * as S from "./styles";
 import { CubeProps } from "./types";
 
-const Cube: React.FC<CubeProps> = ({ size, color, background, rotation }) => {
+const Cube: React.FC<CubeProps> = ({ color, background, rotation }) => {
   const {
     coordinate,
     activeFace,
@@ -25,7 +25,6 @@ const Cube: React.FC<CubeProps> = ({ size, color, background, rotation }) => {
   } = rotation;
 
   const getFaceProps = (face: FACES) => ({
-    size,
     color,
     background,
     onTurn: turn,
@@ -33,8 +32,8 @@ const Cube: React.FC<CubeProps> = ({ size, color, background, rotation }) => {
   });
 
   return (
-    <S.Container size={size} {...dragHandlers}>
-      <S.Scene size={size} $isTurning={isTurning}>
+    <S.Container {...dragHandlers}>
+      <S.Scene $isTurning={isTurning}>
         <S.Cube
           ref={cubeRef}
           style={toRotationVars(coordinate) as React.CSSProperties}
