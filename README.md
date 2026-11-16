@@ -50,7 +50,18 @@ Os testes de `orientation` são, em boa parte, baseados em propriedades: sequên
 
 ## CI e deploy
 
-O workflow em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda lint, checagem de tipos e testes, depois faz o build e roda o Lighthouse. O pipeline falha se performance, acessibilidade, boas práticas ou SEO ficarem abaixo de 90 ([`lighthouserc.json`](lighthouserc.json)). Só com tudo verde, e só na branch padrão, o deploy de produção é disparado na Cloudflare.
+O workflow em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) só valida, sem credenciais da Cloudflare:
+
+- lint, checagem de tipos e testes;
+- build e Lighthouse, falhando se performance, acessibilidade, boas práticas ou SEO ficarem abaixo de 90 ([`lighthouserc.json`](lighthouserc.json));
+- build do Worker com [OpenNext](https://opennext.js.org/cloudflare) e `wrangler deploy --dry-run`, o mesmo artefato publicado em produção.
+
+O deploy é feito pela integração **Workers Builds** da Cloudflare, que builda e publica o Worker `portfolio` ([`wrangler.jsonc`](wrangler.jsonc)) a cada push. Para publicar manualmente ou testar o Worker localmente:
+
+```bash
+yarn preview   # build com OpenNext + Worker local
+yarn deploy    # build com OpenNext + deploy (requer login no Wrangler)
+```
 
 ## Estrutura
 

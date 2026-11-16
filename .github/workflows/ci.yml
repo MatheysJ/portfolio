@@ -1,5 +1,9 @@
 name: CI
 
+# Só valida. O deploy é feito pela integração Workers Builds da Cloudflare
+# (worker "portfolio"), que builda e publica a partir dos pushes.
+# Este workflow não usa credenciais da Cloudflare e não faz deploy.
+
 on:
   pull_request:
   push:
@@ -65,21 +69,24 @@ jobs:
           path: .lighthouseci/
           if-no-files-found: ignore
 
-  deploy:
-    name: Liberar deploy na Cloudflare
-    needs: [quality, lighthouse]
-    # Só a branch padrão vai para produção, e só com todos os checks verdes.
-    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+  worker:
+    name: Build do Worker (OpenNext)
     runs-on: ubuntu-latest
-    environment: production
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
     steps:
-      - name: Disparar deploy hook da Cloudflare
-        env:
-          DEPLOY_HOOK_URL: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK_URL }}
-        run: |
-          if [ -z "$DEPLOY_HOOK_URL" ]; then
-            echo "::warning::Secret CLOUDFLARE_DEPLOY_HOOK_URL não configurado; deploy não disparado."
-            exit 0
-          fi
-          curl --fail --silent --show-error -X POST "$DEPLOY_HOOK_URL"
-          echo "Deploy de produção solicitado à Cloudflare."
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile --non-interactive
+
+      - name: Build com OpenNext (o mesmo artefato que a Cloudflare publica)
+        run: yarn opennextjs-cloudflare build
+
+      - name: Validar o Worker com Wrangler (dry-run, sem deploy)
+        run: yarn wrangler deploy --dry-run --outdir .wrangler/dry-run

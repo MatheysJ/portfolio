@@ -1,0 +1,25 @@
+/**
+ * Configuração do Worker publicado pela integração Workers Builds da Cloudflare.
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "portfolio",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2026-11-16",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".open-next/assets"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"route": {
+		"pattern": "portfolio.matheus-junior.xyz/*",
+		"zone_name": "matheus-junior.xyz"
+	}
+}
