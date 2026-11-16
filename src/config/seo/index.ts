@@ -7,11 +7,15 @@ import {
   STACK,
 } from "@/constants/content";
 
+const DEFAULT_SITE_URL = "https://portfolio.matheus-junior.xyz";
+
 /**
- * URL pública do site (ex.: https://meudominio.dev). Quando definida, habilita
- * URL canônica e og:url. Configure NEXT_PUBLIC_SITE_URL no ambiente de build.
+ * URL pública do site, usada na URL canônica, no og:url e no JSON-LD. Pode ser
+ * sobrescrita com NEXT_PUBLIC_SITE_URL no ambiente de build (ex.: previews).
  */
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL
+).replace(/\/$/, "");
 
 const DISPLAY_NAME = PROFILE.displayName;
 
@@ -28,7 +32,7 @@ export const PERSON_JSON_LD = {
   givenName: "Matheus",
   jobTitle: PROFILE.jobTitle,
   description: PROFILE.summary,
-  ...(SITE_URL && { url: SITE_URL }),
+  url: SITE_URL,
   email: `mailto:${CONTACT.email}`,
   address: {
     "@type": "PostalAddress",

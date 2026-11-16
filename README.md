@@ -1,5 +1,7 @@
 # Portfólio · Cubo 3D
 
+**https://portfolio.matheus-junior.xyz**
+
 Portfólio pessoal em uma única página: um cubo 3D com uma seção do currículo em cada face (Início, Experiência, Projetos, Stack, Formação e Contato). O cubo pode ser girado arrastando, pelas setas do teclado, pelas setas nas bordas de cada face ou pela navegação abaixo dele. Cada face tem uma URL própria (`#experiencia`, `#contato`…).
 
 ## Stack
@@ -28,7 +30,7 @@ yarn dev          # http://localhost:3000
 | `yarn test:ci`    | Testes com cobertura                                   |
 | `yarn lighthouse` | Lighthouse CI contra o build (rode `yarn build` antes) |
 
-A variável `NEXT_PUBLIC_SITE_URL` (ex.: `https://meudominio.dev`) habilita a URL canônica e o `og:url`.
+O site fica em **https://portfolio.matheus-junior.xyz**, domínio usado na URL canônica, no `og:url` e no JSON-LD. Para outro ambiente, sobrescreva com a variável `NEXT_PUBLIC_SITE_URL` no build.
 
 ## Como o cubo funciona
 

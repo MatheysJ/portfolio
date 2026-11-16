@@ -25,12 +25,8 @@ export default function Home() {
         <meta property="og:description" content={SEO.description} />
         <meta property="profile:first_name" content="Matheus" />
         <meta name="twitter:card" content="summary" />
-        {SITE_URL && (
-          <>
-            <link rel="canonical" href={`${SITE_URL}/`} />
-            <meta property="og:url" content={`${SITE_URL}/`} />
-          </>
-        )}
+        <link rel="canonical" href={`${SITE_URL}/`} />
+        <meta property="og:url" content={`${SITE_URL}/`} />
 
         <script
           type="application/ld+json"
