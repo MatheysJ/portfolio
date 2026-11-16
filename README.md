@@ -67,12 +67,21 @@ yarn deploy    # build com OpenNext + deploy (requer login no Wrangler)
 
 ```
 src/
-├── components/Common/   # Cubo, faces, navegação e botões
-├── config/              # SEO (meta tags, JSON-LD) e tema do Chakra
-├── constants/           # Conteúdo do currículo, faces e direções
-├── hooks/               # useCubeRotation, useHashNavigation
+├── components/
+│   ├── Common/          # Cubo, faces, navegação, setas e chips
+│   └── SeoHead/         # Meta tags, Open Graph e JSON-LD
+├── config/              # URL do site, SEO e tema do Chakra
+├── constants/           # Conteúdo, faces, direções, geometria e tempos de animação
+├── hooks/
+│   ├── useCubeRotation/ # Estado do cubo, animação (slerp) e arraste
+│   ├── useArrowKeys/    # Setas do teclado
+│   └── useHashNavigation/
 ├── pages/               # Página única + _app/_document
-└── utils/orientation/   # Matrizes, quaternions e slerp
+└── utils/
+    ├── orientation/     # matrix, quaternion e regras do cubo
+    └── …                # math, easing, dom, faces, jsonLd
 ```
+
+A posição de cada face no cubo fica em um só lugar ([`constants/cube.ts`](src/constants/cube.ts)) e alimenta tanto o CSS das faces quanto o cálculo da orientação. Para mudar a face onde cada seção aparece, basta editar o mapa `FACE_CONTENT` em [`Cube/index.tsx`](src/components/Common/Cube/index.tsx).
 
 O conteúdo do currículo fica todo em [`src/constants/content.ts`](src/constants/content.ts).

@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
-import { FACES, FACES_DATA, getFaceBySlug } from "@/constants/faces";
+import { FACES } from "@/constants/faces";
+import { getFaceBySlug, getFaceHash } from "@/utils/faces";
 
+/** Mantém o hash da URL (`#experiencia`…) sincronizado com a face ativa. */
 const useHashNavigation = (activeFace: FACES, goTo: (face: FACES) => void) => {
   const isReadyRef = useRef(false);
 
   useEffect(() => {
     if (!isReadyRef.current) return;
 
-    const hash =
-      activeFace === FACES.FRONT ? "" : `#${FACES_DATA[activeFace].slug}`;
+    const hash = getFaceHash(activeFace);
     if (window.location.hash === hash) return;
 
     const { pathname, search } = window.location;

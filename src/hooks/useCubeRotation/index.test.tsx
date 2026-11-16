@@ -8,9 +8,10 @@ import {
 } from "@testing-library/react";
 import { FACES } from "@/constants/faces";
 import { DIRECTIONS } from "@/constants/directions";
-import { TURNS, toMatrix3d } from "@/utils/orientation";
+import { ORIENTATION_VAR } from "@/constants/cube";
+import { IDENTITY_MATRIX3D, TURNS, toMatrix3d } from "@/utils/orientation";
 
-import useCubeRotation, { IDENTITY_MATRIX3D, ORIENTATION_VAR } from ".";
+import useCubeRotation from ".";
 
 const SIZE = 500;
 

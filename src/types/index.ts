@@ -1,6 +1,9 @@
+import { ReactNode } from "react";
 import { FACES } from "@/constants/faces";
 import { DIRECTIONS } from "@/constants/directions";
-import { ReactNode } from "react";
+
+/** Eixo da tela em torno do qual o cubo gira. */
+export type Axis = "x" | "y";
 
 export interface ChildrenAsProps {
   children?: ReactNode;

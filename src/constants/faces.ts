@@ -13,38 +13,16 @@ interface FaceData {
 }
 
 export const FACES_DATA: Record<FACES, FaceData> = {
-  [FACES.FRONT]: {
-    label: "Início",
-    slug: "inicio",
-  },
-  [FACES.RIGHT]: {
-    label: "Experiência",
-    slug: "experiencia",
-  },
-  [FACES.BACK]: {
-    label: "Stack",
-    slug: "stack",
-  },
-  [FACES.LEFT]: {
-    label: "Contato",
-    slug: "contato",
-  },
-  [FACES.TOP]: {
-    label: "Projetos",
-    slug: "projetos",
-  },
-  [FACES.BOTTOM]: {
-    label: "Formação",
-    slug: "formacao",
-  },
+  [FACES.FRONT]: { label: "Início", slug: "inicio" },
+  [FACES.RIGHT]: { label: "Experiência", slug: "experiencia" },
+  [FACES.BACK]: { label: "Stack", slug: "stack" },
+  [FACES.LEFT]: { label: "Contato", slug: "contato" },
+  [FACES.TOP]: { label: "Projetos", slug: "projetos" },
+  [FACES.BOTTOM]: { label: "Formação", slug: "formacao" },
 };
 
-export const getFaceBySlug = (slug: string): FACES | undefined =>
-  (Object.keys(FACES_DATA) as FACES[]).find(
-    (face) => FACES_DATA[face].slug === slug,
-  );
-
-export const NAV_ORDER = [
+/** Ordem de leitura das faces: na navegação e no HTML do cubo. */
+export const FACE_ORDER = [
   FACES.FRONT,
   FACES.RIGHT,
   FACES.TOP,

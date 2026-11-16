@@ -1,13 +1,13 @@
 import React from "react";
 import { Flex, Text } from "@chakra-ui/react";
-import { FACES } from "@/constants/faces";
 import { CERTIFICATIONS, EDUCATION } from "@/constants/content";
 
-import { CubeEducationProps } from "./types";
-import { CubeFace } from "..";
+import Face from "../Face";
+import { CubeFaceContentProps } from "../Face/types";
+import SectionLabel from "../SectionLabel";
 
-const Education: React.FC<CubeEducationProps> = (props) => (
-  <CubeFace {...props} face={FACES.BOTTOM} title="FORMAÇÃO">
+const Education: React.FC<CubeFaceContentProps> = (props) => (
+  <Face {...props}>
     <Flex direction="column" gap="4">
       <Flex direction="column" gap="2.5">
         {EDUCATION.map(({ title, place, period }) => (
@@ -22,9 +22,7 @@ const Education: React.FC<CubeEducationProps> = (props) => (
       </Flex>
 
       <Flex direction="column" gap="2">
-        <Text color="teal.400" fontSize="0.85em">
-          Certificações & idiomas
-        </Text>
+        <SectionLabel>Certificações & idiomas</SectionLabel>
         {CERTIFICATIONS.map(({ title, detail }) => (
           <Flex key={title} direction="column">
             <Text>{title}</Text>
@@ -33,7 +31,7 @@ const Education: React.FC<CubeEducationProps> = (props) => (
         ))}
       </Flex>
     </Flex>
-  </CubeFace>
+  </Face>
 );
 
 export default Education;

@@ -6,16 +6,7 @@ import {
   PROFILE,
   STACK,
 } from "@/constants/content";
-
-const DEFAULT_SITE_URL = "https://portfolio.matheus-junior.xyz";
-
-/**
- * URL pública do site, usada na URL canônica, no og:url e no JSON-LD. Pode ser
- * sobrescrita com NEXT_PUBLIC_SITE_URL no ambiente de build (ex.: previews).
- */
-export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL
-).replace(/\/$/, "");
+import { SITE_URL } from "@/config/site";
 
 const DISPLAY_NAME = PROFILE.displayName;
 
@@ -29,7 +20,7 @@ export const PERSON_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Person",
   name: DISPLAY_NAME,
-  givenName: "Matheus",
+  givenName: PROFILE.givenName,
   jobTitle: PROFILE.jobTitle,
   description: PROFILE.summary,
   url: SITE_URL,
@@ -59,7 +50,3 @@ export const PERSON_JSON_LD = {
     codeRepository: PERSONAL_PROJECT.link.href,
   },
 };
-
-/** Serializa o JSON-LD sem permitir que o conteúdo feche a tag <script>. */
-export const serializeJsonLd = (data: object) =>
-  JSON.stringify(data).replace(/</g, "\\u003c");

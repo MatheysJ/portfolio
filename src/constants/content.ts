@@ -6,6 +6,7 @@
 
 export const PROFILE = {
   name: "MATHEUS J.",
+  givenName: "Matheus",
   displayName: "Matheus J.",
   role: "SOFTWARE ENGINEER",
   jobTitle: "Engenheiro de Software Full Stack",
@@ -28,6 +29,17 @@ export const CONTACT = {
     href: "https://github.com/MatheysJ",
   },
 };
+
+/** Contatos listados na face de contato. */
+export const CONTACT_LINKS = [
+  { label: "E-mail", value: CONTACT.email, href: `mailto:${CONTACT.email}` },
+  {
+    label: "LinkedIn",
+    value: CONTACT.linkedin.label,
+    href: CONTACT.linkedin.href,
+  },
+  { label: "GitHub", value: CONTACT.github.label, href: CONTACT.github.href },
+];
 
 export const EXPERIENCE = {
   company: "Compass.UOL",

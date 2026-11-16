@@ -1,11 +1,10 @@
 import React from "react";
-import { FACES } from "@/constants/faces";
-import { PROFILE } from "@/constants/content";
 import { Flex, Text } from "@chakra-ui/react";
 import { IoLaptopOutline, IoLocationSharp } from "react-icons/io5";
+import { PROFILE } from "@/constants/content";
 
-import { CubeFrontProps } from "./types";
-import { CubeFace } from "..";
+import Face from "../Face";
+import { CubeFaceContentProps } from "../Face/types";
 
 /**
  * Renderizada via CSS (::before): instrução de interface, não conteúdo do
@@ -13,8 +12,8 @@ import { CubeFace } from "..";
  */
 const INTERACTION_HINT = "Arraste, use as setas do teclado ou clique nas bordas";
 
-const Front: React.FC<CubeFrontProps> = (props) => (
-  <CubeFace {...props} face={FACES.FRONT} title={PROFILE.name} titleAs="h1">
+const Front: React.FC<CubeFaceContentProps> = (props) => (
+  <Face {...props} title={PROFILE.name} titleAs="h1">
     <Flex h="100%" direction="column" justifyContent="space-between" gap="4">
       <Flex direction="column" gap="3">
         <Text color="whiteAlpha.700">{PROFILE.headline}</Text>
@@ -50,7 +49,7 @@ const Front: React.FC<CubeFrontProps> = (props) => (
         />
       </Flex>
     </Flex>
-  </CubeFace>
+  </Face>
 );
 
 export default Front;

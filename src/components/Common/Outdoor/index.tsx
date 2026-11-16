@@ -2,7 +2,8 @@ import React from "react";
 import { Flex } from "@chakra-ui/react";
 import { useCubeRotation, useHashNavigation } from "@/hooks";
 
-import { Cube, CubeNav } from "..";
+import Cube from "../Cube";
+import CubeNav from "../CubeNav";
 
 const Outdoor: React.FC = () => {
   const rotation = useCubeRotation();

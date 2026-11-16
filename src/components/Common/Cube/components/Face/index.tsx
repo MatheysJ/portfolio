@@ -1,13 +1,17 @@
 import React from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { ArrowButton } from "@/components/Common";
-import { FACES_DATA } from "@/constants/faces";
+import ArrowButton from "@/components/Common/ArrowButton";
 import { DIRECTIONS } from "@/constants/directions";
+import { FACES_DATA } from "@/constants/faces";
+import { getFaceTitle } from "@/utils/faces";
 
 import { CubeFaceProps } from "./types";
 import { FaceContext } from "./context";
 import * as S from "./styles";
 
+const ARROWS = Object.values(DIRECTIONS);
+
+/** Moldura comum das faces: posição no cubo, setas, título e área rolável. */
 const Face: React.FC<CubeFaceProps> = ({
   children,
   background,
@@ -16,7 +20,7 @@ const Face: React.FC<CubeFaceProps> = ({
   onTurn,
   isActive,
   contentAngle = 0,
-  title,
+  title = getFaceTitle(face),
   titleAs = "h2",
 }) => {
   const { label, slug } = FACES_DATA[face];
@@ -37,23 +41,24 @@ const Face: React.FC<CubeFaceProps> = ({
           transform={`rotate(${contentAngle}deg)`}
         >
           <Box display="contents" inert={!isActive}>
-            <ArrowButton.Left onClick={() => onTurn(DIRECTIONS.LEFT)} />
-            <ArrowButton.Right onClick={() => onTurn(DIRECTIONS.RIGHT)} />
-            <ArrowButton.Up onClick={() => onTurn(DIRECTIONS.UP)} />
-            <ArrowButton.Down onClick={() => onTurn(DIRECTIONS.DOWN)} />
+            {ARROWS.map((direction) => (
+              <ArrowButton
+                key={direction}
+                direction={direction}
+                onClick={onTurn}
+              />
+            ))}
           </Box>
 
           <Flex h="100%" direction="column" px="9" py="8" gap="3">
-            {title && (
-              <Text
-                as={titleAs}
-                fontSize="max(22px, 7cqi)"
-                lineHeight="1"
-                letterSpacing="tight"
-              >
-                {title}
-              </Text>
-            )}
+            <Text
+              as={titleAs}
+              fontSize="max(22px, 7cqi)"
+              lineHeight="1"
+              letterSpacing="tight"
+            >
+              {title}
+            </Text>
             <Flex
               direction="column"
               flex="1"
