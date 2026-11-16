@@ -8,22 +8,21 @@ import {
 } from "@testing-library/react";
 import { FACES } from "@/constants/faces";
 import { DIRECTIONS } from "@/constants/directions";
+import { TURNS, toMatrix3d } from "@/utils/orientation";
 
-import useCubeRotation, {
-  getActiveFace,
-  getCoordinateAfterTurn,
-  getCoordinateTo,
-  toRotationVars,
-} from ".";
+import useCubeRotation, { IDENTITY_MATRIX3D, ORIENTATION_VAR } from ".";
 
 const SIZE = 500;
 
+// jsdom não implementa PointerEvent nem pointer capture.
 class PointerEventPolyfill extends MouseEvent {
   pointerId: number;
+  pointerType: string;
 
   constructor(type: string, init: PointerEventInit = {}) {
     super(type, init);
     this.pointerId = init.pointerId ?? 1;
+    this.pointerType = init.pointerType ?? "mouse";
   }
 }
 
@@ -32,100 +31,15 @@ beforeAll(() => {
   Element.prototype.setPointerCapture ??= jest.fn();
 });
 
-describe("getActiveFace", () => {
-  it.each([
-    [{ x: 0, y: 0 }, FACES.FRONT],
-    [{ x: -90, y: 0 }, FACES.RIGHT],
-    [{ x: 180, y: 0 }, FACES.BACK],
-    [{ x: -180, y: 0 }, FACES.BACK],
-    [{ x: 90, y: 0 }, FACES.LEFT],
-    [{ x: -450, y: 0 }, FACES.RIGHT],
-    [{ x: 720, y: 0 }, FACES.FRONT],
-    [{ x: 180, y: -90 }, FACES.TOP],
-    [{ x: -90, y: 90 }, FACES.BOTTOM],
-  ])("%j → %s", (coordinate, face) => {
-    expect(getActiveFace(coordinate)).toBe(face);
-  });
-});
-
-describe("getCoordinateTo", () => {
-  it("gira pelo caminho mais curto até uma face do anel", () => {
-    expect(getCoordinateTo(FACES.LEFT, { x: 0, y: 0 })).toEqual({
-      x: 90,
-      y: 0,
-    });
-    expect(getCoordinateTo(FACES.RIGHT, { x: 0, y: 0 })).toEqual({
-      x: -90,
-      y: 0,
-    });
-    // Após várias voltas, não "desenrola" o cubo: anda só 90°.
-    expect(getCoordinateTo(FACES.FRONT, { x: -270, y: 0 })).toEqual({
-      x: -360,
-      y: 0,
-    });
-  });
-
-  it("apenas inclina para chegar ao topo ou à base", () => {
-    expect(getCoordinateTo(FACES.TOP, { x: -90, y: 0 })).toEqual({
-      x: -90,
-      y: -90,
-    });
-    expect(getCoordinateTo(FACES.BOTTOM, { x: 180, y: 0 })).toEqual({
-      x: 180,
-      y: 90,
-    });
-  });
-
-  it("volta ao anel a partir do topo", () => {
-    expect(getCoordinateTo(FACES.FRONT, { x: -90, y: -90 })).toEqual({
-      x: 0,
-      y: 0,
-    });
-  });
-});
-
-describe("getCoordinateAfterTurn", () => {
-  const ring = { x: 0, y: 0 };
-  const top = { x: 0, y: -90 };
-  const bottom = { x: 0, y: 90 };
-
-  it("gira 90° na horizontal enquanto está no anel", () => {
-    expect(getCoordinateAfterTurn(DIRECTIONS.LEFT, ring)).toEqual({
-      x: 90,
-      y: 0,
-    });
-    expect(getCoordinateAfterTurn(DIRECTIONS.RIGHT, ring)).toEqual({
-      x: -90,
-      y: 0,
-    });
-  });
-
-  it("ignora giros horizontais no topo e na base", () => {
-    expect(getCoordinateAfterTurn(DIRECTIONS.LEFT, top)).toBe(top);
-    expect(getCoordinateAfterTurn(DIRECTIONS.RIGHT, bottom)).toBe(bottom);
-  });
-
-  it("navega verticalmente entre anel, topo e base", () => {
-    expect(getCoordinateAfterTurn(DIRECTIONS.UP, ring)).toEqual(top);
-    expect(getCoordinateAfterTurn(DIRECTIONS.DOWN, ring)).toEqual(bottom);
-    expect(getCoordinateAfterTurn(DIRECTIONS.DOWN, top)).toEqual(ring);
-    expect(getCoordinateAfterTurn(DIRECTIONS.UP, bottom)).toEqual(ring);
-  });
-
-  it("não passa do topo nem da base", () => {
-    expect(getCoordinateAfterTurn(DIRECTIONS.UP, top)).toBe(top);
-    expect(getCoordinateAfterTurn(DIRECTIONS.DOWN, bottom)).toBe(bottom);
-  });
-});
-
 describe("useCubeRotation", () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it("começa na face frontal", () => {
+  it("começa na face frontal, com o conteúdo em pé", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     expect(result.current.activeFace).toBe(FACES.FRONT);
+    expect(result.current.contentAngles[FACES.FRONT]).toBe(0);
     expect(result.current.isTurning).toBe(false);
   });
 
@@ -140,21 +54,49 @@ describe("useCubeRotation", () => {
     expect(result.current.isTurning).toBe(false);
   });
 
-  it("não dispara giro quando a posição não muda", () => {
+  it("não dispara giro quando a face já está de frente", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.goTo(FACES.FRONT));
     expect(result.current.isTurning).toBe(false);
   });
 
-  it("ajusta o conteúdo do topo conforme a face de origem", () => {
+  it("gira em todas as direções, inclusive depois de sair do anel", () => {
+    const { result } = renderHook(() => useCubeRotation());
+
+    act(() => result.current.turn(DIRECTIONS.UP));
+    expect(result.current.activeFace).toBe(FACES.TOP);
+
+    act(() => result.current.turn(DIRECTIONS.UP));
+    expect(result.current.activeFace).toBe(FACES.BACK);
+
+    act(() => result.current.turn(DIRECTIONS.RIGHT));
+    act(() => result.current.turn(DIRECTIONS.RIGHT));
+    act(() => result.current.turn(DIRECTIONS.RIGHT));
+    act(() => result.current.turn(DIRECTIONS.RIGHT));
+    expect(result.current.activeFace).toBe(FACES.BACK);
+  });
+
+  it("endireita o conteúdo da face que chega", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.goTo(FACES.RIGHT));
     act(() => result.current.turn(DIRECTIONS.UP));
 
     expect(result.current.activeFace).toBe(FACES.TOP);
-    expect(result.current.capAngle).toBe(270);
+    expect(result.current.contentAngles[FACES.TOP]).toBe(270);
+  });
+
+  it("navega até qualquer face, de qualquer posição", () => {
+    const { result } = renderHook(() => useCubeRotation());
+
+    act(() => result.current.turn(DIRECTIONS.DOWN));
+    act(() => result.current.turn(DIRECTIONS.LEFT));
+
+    Object.values(FACES).forEach((face) => {
+      act(() => result.current.goTo(face));
+      expect(result.current.activeFace).toBe(face);
+    });
   });
 
   it("responde às setas do teclado", () => {
@@ -186,91 +128,146 @@ describe("useCubeRotation", () => {
   });
 });
 
-describe("useCubeRotation · arraste", () => {
+describe("useCubeRotation · cubo no DOM", () => {
   const onChildClick = jest.fn();
 
-  const DragHarness = () => {
-    const { activeFace, cubeRef, dragHandlers } = useCubeRotation();
+  const Harness = () => {
+    const { activeFace, cubeRef, cubeStyle, dragHandlers, turn } =
+      useCubeRotation();
 
     return (
       <div data-testid="container" {...dragHandlers}>
-        <div ref={cubeRef} />
+        <div data-testid="cube" ref={cubeRef} style={cubeStyle} />
         <button onClick={onChildClick}>link</button>
+        <button onClick={() => turn(DIRECTIONS.RIGHT)}>girar</button>
         <span data-testid="face">{activeFace}</span>
       </div>
     );
   };
 
-  const drag = (fromX: number, toX: number) => {
+  const orientationOf = () =>
+    screen.getByTestId("cube").style.getPropertyValue(ORIENTATION_VAR);
+
+  const drag = (
+    from: [number, number],
+    to: [number, number],
+    pointerType = "mouse",
+  ) => {
     const container = screen.getByTestId("container");
-    fireEvent.pointerDown(container, { button: 0, clientX: fromX });
-    fireEvent.pointerMove(container, { clientX: (fromX + toX) / 2 });
-    fireEvent.pointerMove(container, { clientX: toX });
-    fireEvent.pointerUp(container, { clientX: toX });
+    const [x1, y1] = from;
+    const [x2, y2] = to;
+    fireEvent.pointerDown(container, {
+      button: 0,
+      clientX: x1,
+      clientY: y1,
+      pointerType,
+    });
+    fireEvent.pointerMove(container, {
+      clientX: (x1 + x2) / 2,
+      clientY: (y1 + y2) / 2,
+      pointerType,
+    });
+    fireEvent.pointerMove(container, { clientX: x2, clientY: y2, pointerType });
+    fireEvent.pointerUp(container, { clientX: x2, clientY: y2, pointerType });
   };
 
   beforeEach(() => {
+    jest.useFakeTimers();
     onChildClick.mockClear();
+    // jsdom não calcula layout: simula o cubo com SIZE px de largura.
     jest
       .spyOn(HTMLElement.prototype, "getBoundingClientRect")
       .mockReturnValue({ width: SIZE, height: SIZE } as DOMRect);
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+  });
+
+  it("anima a orientação até o alvo exato", () => {
+    render(<Harness />);
+    expect(orientationOf()).toBe(IDENTITY_MATRIX3D);
+
+    fireEvent.click(screen.getByText("girar"));
+    act(() => jest.advanceTimersByTime(400));
+    const midway = orientationOf();
+    expect(midway).not.toBe(IDENTITY_MATRIX3D);
+
+    act(() => jest.advanceTimersByTime(1000));
+    expect(orientationOf()).toBe(toMatrix3d(TURNS[DIRECTIONS.RIGHT]));
+  });
 
   it("troca de face ao arrastar mais da metade", () => {
-    render(<DragHarness />);
+    render(<Harness />);
 
-    drag(400, 100);
+    drag([400, 0], [100, 0]);
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.RIGHT);
   });
 
   it("troca de face com um arraste curto e decidido", () => {
-    render(<DragHarness />);
+    render(<Harness />);
 
-    drag(100, 180);
+    drag([100, 0], [180, 0]);
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.LEFT);
   });
 
   it("volta para a mesma face em arrastes pequenos", () => {
-    render(<DragHarness />);
+    render(<Harness />);
 
-    drag(100, 115);
+    drag([100, 0], [115, 0]);
+    expect(screen.getByTestId("face")).toHaveTextContent(FACES.FRONT);
+
+    act(() => jest.runAllTimers());
+    expect(orientationOf()).toBe(IDENTITY_MATRIX3D);
+  });
+
+  it("gira na vertical ao arrastar com o mouse", () => {
+    render(<Harness />);
+
+    drag([0, 100], [0, 400]);
+    expect(screen.getByTestId("face")).toHaveTextContent(FACES.TOP);
+  });
+
+  it("deixa o arraste vertical do touch para a rolagem do conteúdo", () => {
+    render(<Harness />);
+
+    drag([0, 100], [0, 400], "touch");
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.FRONT);
   });
 
-  it("não confunde arraste com clique nos elementos da face", () => {
-    jest.useFakeTimers();
-    render(<DragHarness />);
+  it("gira na horizontal depois de chegar ao topo", () => {
+    render(<Harness />);
 
-    drag(400, 100);
+    drag([0, 100], [0, 400]);
+    act(() => jest.runAllTimers());
+    drag([400, 0], [100, 0]);
+
+    // No topo, a face à direita na tela continua sendo a RIGHT.
+    expect(screen.getByTestId("face")).toHaveTextContent(FACES.RIGHT);
+  });
+
+  it("não confunde arraste com clique nos elementos da face", () => {
+    render(<Harness />);
+
+    drag([400, 0], [100, 0]);
     fireEvent.click(screen.getByText("link"));
     expect(onChildClick).not.toHaveBeenCalled();
 
     act(() => jest.runAllTimers());
     fireEvent.click(screen.getByText("link"));
     expect(onChildClick).toHaveBeenCalledTimes(1);
-    jest.useRealTimers();
   });
 
   it("mantém o clique quando o ponteiro quase não se move", () => {
-    render(<DragHarness />);
+    render(<Harness />);
     const button = screen.getByText("link");
 
-    fireEvent.pointerDown(button, { button: 0, clientX: 100 });
-    fireEvent.pointerUp(button, { clientX: 102 });
+    fireEvent.pointerDown(button, { button: 0, clientX: 100, clientY: 0 });
+    fireEvent.pointerUp(button, { clientX: 102, clientY: 0 });
     fireEvent.click(button);
 
     expect(onChildClick).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.FRONT);
-  });
-});
-
-describe("toRotationVars", () => {
-  it("gera as variáveis CSS de rotação a partir da coordenada", () => {
-    expect(toRotationVars({ x: -90, y: 45 })).toEqual({
-      "--cube-rotate-y": "-90deg",
-      "--cube-rotate-x": "45deg",
-    });
   });
 });

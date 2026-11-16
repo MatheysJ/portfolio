@@ -1,113 +1,171 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { FACES, FACES_DATA, RING_ORDER } from "@/constants/faces";
+import { FACES } from "@/constants/faces";
 import { DIRECTIONS, KEY_TO_DIRECTION } from "@/constants/directions";
-import { Coordinate } from "@/types";
+import {
+  Axis,
+  IDENTITY,
+  Matrix,
+  Quaternion,
+  TURNS,
+  fromQuaternion,
+  getActiveFace,
+  getContentAngle,
+  getTurnToFace,
+  isSameMatrix,
+  multiply,
+  rotation,
+  slerp,
+  toMatrix3d,
+  toQuaternion,
+} from "@/utils/orientation";
 
 const TURN_FEEDBACK_MS = 320;
+const TURN_DURATION_MS = 850;
+const SNAP_DURATION_MS = 450;
 const DRAG_THRESHOLD_PX = 6;
 const FLICK_THRESHOLD_DEG = 15;
+/** Graus de giro por largura do cubo arrastada. */
+const DRAG_DEGREES_PER_SIZE = 110;
 
-const mod = (value: number, base: number) => ((value % base) + base) % base;
+/** Variável CSS lida pelas faces: `transform: matrix3d(var(...)) ...`. */
+export const ORIENTATION_VAR = "--cube-orientation";
+export const IDENTITY_MATRIX3D = toMatrix3d(IDENTITY);
 
-export const ROTATION_VARS = { x: "--cube-rotate-y", y: "--cube-rotate-x" };
+const easeInOutQuart = (t: number) =>
+  t < 0.5 ? 8 * t ** 4 : 1 - (-2 * t + 2) ** 4 / 2;
+const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
-export const toRotationVars = ({ x, y }: Coordinate) => ({
-  [ROTATION_VARS.x]: `${x}deg`,
-  [ROTATION_VARS.y]: `${y}deg`,
-});
-
-const applyRotationVars = (element: HTMLElement, coordinate: Coordinate) =>
-  Object.entries(toRotationVars(coordinate)).forEach(([name, value]) =>
-    element.style.setProperty(name, value),
-  );
-
-export const getActiveFace = ({ x, y }: Coordinate): FACES => {
-  if (y < 0) return FACES.TOP;
-  if (y > 0) return FACES.BOTTOM;
-  return RING_ORDER[mod(Math.round(-x / 90), RING_ORDER.length)];
-};
-
-export const getCoordinateTo = (
-  face: FACES,
-  current: Coordinate,
-): Coordinate => {
-  const target = FACES_DATA[face].coordinate;
-
-  if (target.y !== 0) return { x: current.x, y: target.y };
-
-  const delta = mod(target.x - current.x + 180, 360) - 180;
-  return { x: current.x + delta, y: 0 };
-};
-
-export const getCoordinateAfterTurn = (
-  direction: DIRECTIONS,
-  current: Coordinate,
-): Coordinate => {
-  const face = getActiveFace(current);
-  const isOnRing = current.y === 0;
-
-  switch (direction) {
-    case DIRECTIONS.LEFT:
-      return { ...current, x: current.x + 90 };
-    case DIRECTIONS.RIGHT:
-      return { ...current, x: current.x - 90 };
-    case DIRECTIONS.UP:
-      return { ...current, y: current.y - 90 };
-    case DIRECTIONS.DOWN:
-      return { ...current, y: current.y + 90 };
-  }
-};
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 const isTypingTarget = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   (target.isContentEditable ||
     ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
+const INITIAL_CONTENT_ANGLES = Object.fromEntries(
+  Object.values(FACES).map((face) => [face, 0]),
+) as Record<FACES, number>;
+
 interface DragState {
   pointerId: number;
+  pointerType: string;
   size: number;
   startX: number;
-  baseX: number;
-  currentX: number;
-  isDragging: boolean;
+  startY: number;
+  axis: Axis | null;
+  angle: number;
+  base: Matrix;
+}
+
+interface Animation {
+  frame: number;
 }
 
 const useCubeRotation = () => {
-  const [coordinate, setCoordinate] = useState<Coordinate>({ x: 0, y: 0 });
+  const [orientation, setOrientation] = useState<Matrix>(IDENTITY);
+  const [contentAngles, setContentAngles] = useState(INITIAL_CONTENT_ANGLES);
   const [isTurning, setIsTurning] = useState(false);
-  const [capAngle, setCapAngle] = useState(0);
 
   const cubeRef = useRef<HTMLDivElement>(null);
-  const coordinateRef = useRef(coordinate);
+  const orientationRef = useRef<Matrix>(IDENTITY);
+  /** Orientação exibida neste instante (pode estar no meio de um giro). */
+  const shownRef = useRef<Quaternion>(toQuaternion(IDENTITY));
+  const animationRef = useRef<Animation | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const suppressClickRef = useRef(false);
   const turnTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  coordinateRef.current = coordinate;
-
-  const rotateTo = useCallback((next: Coordinate) => {
-    const current = coordinateRef.current;
-    if (next.x === current.x && next.y === current.y) return;
-
-    if (current.y === 0 && next.y !== 0) setCapAngle(mod(current.x, 360));
-    coordinateRef.current = next;
-    setCoordinate(next);
-    setIsTurning(true);
-    clearTimeout(turnTimeoutRef.current);
-    turnTimeoutRef.current = setTimeout(
-      () => setIsTurning(false),
-      TURN_FEEDBACK_MS,
-    );
+  const paint = useCallback((matrix: Matrix) => {
+    cubeRef.current?.style.setProperty(ORIENTATION_VAR, toMatrix3d(matrix));
   }, []);
+
+  const stopAnimation = useCallback(() => {
+    if (animationRef.current) cancelAnimationFrame(animationRef.current.frame);
+    animationRef.current = null;
+  }, []);
+
+  /** Anima da orientação exibida até o alvo, pelo menor caminho. */
+  const animateTo = useCallback(
+    (target: Matrix, { snap = false } = {}) => {
+      const isRetarget = animationRef.current !== null;
+      stopAnimation();
+
+      const from = shownRef.current;
+      const to = toQuaternion(target);
+      const duration = prefersReducedMotion()
+        ? 0
+        : snap
+          ? SNAP_DURATION_MS
+          : TURN_DURATION_MS;
+      // Ao mudar de alvo no meio de um giro, desacelera em vez de recomeçar
+      // devagar, para o movimento não "engasgar".
+      const ease = snap || isRetarget ? easeOutCubic : easeInOutQuart;
+      let start: number | null = null;
+
+      const step = (now: number) => {
+        start ??= now;
+        const progress = duration ? Math.min((now - start) / duration, 1) : 1;
+
+        if (progress < 1) {
+          shownRef.current = slerp(from, to, ease(progress));
+          paint(fromQuaternion(shownRef.current));
+          animationRef.current = { frame: requestAnimationFrame(step) };
+          return;
+        }
+
+        shownRef.current = to;
+        paint(target);
+        animationRef.current = null;
+      };
+
+      animationRef.current = { frame: requestAnimationFrame(step) };
+    },
+    [paint, stopAnimation],
+  );
+
+  /** Prepara o conteúdo das faces que vão aparecer para chegarem "em pé". */
+  const straightenFaces = useCallback((targets: Matrix[]) => {
+    setContentAngles((current) => {
+      const next = { ...current };
+      targets.forEach((target) => {
+        const face = getActiveFace(target);
+        next[face] = getContentAngle(face, target);
+      });
+      return next;
+    });
+  }, []);
+
+  const rotateTo = useCallback(
+    (target: Matrix, options?: { snap?: boolean }) => {
+      if (!isSameMatrix(target, orientationRef.current)) {
+        straightenFaces([target]);
+        orientationRef.current = target;
+        setOrientation(target);
+        setIsTurning(true);
+        clearTimeout(turnTimeoutRef.current);
+        turnTimeoutRef.current = setTimeout(
+          () => setIsTurning(false),
+          TURN_FEEDBACK_MS,
+        );
+      }
+      animateTo(target, options);
+    },
+    [animateTo, straightenFaces],
+  );
 
   const turn = useCallback(
     (direction: DIRECTIONS) =>
-      rotateTo(getCoordinateAfterTurn(direction, coordinateRef.current)),
+      rotateTo(multiply(TURNS[direction], orientationRef.current)),
     [rotateTo],
   );
 
   const goTo = useCallback(
-    (face: FACES) => rotateTo(getCoordinateTo(face, coordinateRef.current)),
+    (face: FACES) => {
+      const turnToFace = getTurnToFace(face, orientationRef.current);
+      if (turnToFace) rotateTo(multiply(turnToFace, orientationRef.current));
+    },
     [rotateTo],
   );
 
@@ -125,65 +183,94 @@ const useCubeRotation = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [turn]);
 
-  useEffect(() => () => clearTimeout(turnTimeoutRef.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(turnTimeoutRef.current);
+      stopAnimation();
+    },
+    [stopAnimation],
+  );
 
+  /*
+   * Arraste: o eixo é decidido pela direção dominante do movimento. Em touch,
+   * o arraste vertical fica com a rolagem do conteúdo (touch-action: pan-y).
+   * Durante o arraste a orientação é aplicada direto no DOM, sem re-render.
+   */
   const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
-    if (event.button !== 0 || coordinateRef.current.y !== 0) return;
+    if (event.button !== 0) return;
 
     dragRef.current = {
       pointerId: event.pointerId,
+      pointerType: event.pointerType,
       size: Math.max(event.currentTarget.getBoundingClientRect().width, 1),
       startX: event.clientX,
-      baseX: coordinateRef.current.x,
-      currentX: coordinateRef.current.x,
-      isDragging: false,
+      startY: event.clientY,
+      axis: null,
+      angle: 0,
+      base: orientationRef.current,
     };
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
-    const cube = cubeRef.current;
-    if (!drag || !cube || drag.pointerId !== event.pointerId) return;
+    if (!drag || drag.pointerId !== event.pointerId) return;
 
-    const deltaPx = event.clientX - drag.startX;
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
 
-    if (!drag.isDragging) {
-      if (Math.abs(deltaPx) < DRAG_THRESHOLD_PX) return;
+    if (!drag.axis) {
+      if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < DRAG_THRESHOLD_PX) {
+        return;
+      }
 
-      drag.isDragging = true;
+      const axis: Axis = Math.abs(deltaX) >= Math.abs(deltaY) ? "y" : "x";
+      if (axis === "x" && drag.pointerType === "touch") {
+        dragRef.current = null;
+        return;
+      }
+
+      drag.axis = axis;
+      drag.base = orientationRef.current;
+      stopAnimation();
+      straightenFaces([
+        multiply(rotation(axis, 90), drag.base),
+        multiply(rotation(axis, -90), drag.base),
+      ]);
       event.currentTarget.setPointerCapture(event.pointerId);
       event.currentTarget.dataset.dragging = "true";
       window.getSelection()?.removeAllRanges();
-      cube.dataset.dragging = "true";
     }
 
-    drag.currentX = drag.baseX + (deltaPx / drag.size) * 110;
-    applyRotationVars(cube, { x: drag.currentX, y: 0 });
+    // Arrastar para baixo revela a face de cima (giro negativo em X).
+    const delta = drag.axis === "y" ? deltaX : -deltaY;
+    drag.angle = Math.max(
+      -90,
+      Math.min(90, (delta / drag.size) * DRAG_DEGREES_PER_SIZE),
+    );
+
+    const live = multiply(rotation(drag.axis, drag.angle), drag.base);
+    shownRef.current = toQuaternion(live);
+    paint(live);
   };
 
   const onPointerEnd = (event: React.PointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     dragRef.current = null;
-    if (!drag.isDragging) return;
+    if (!drag.axis) return;
 
     delete event.currentTarget.dataset.dragging;
     suppressClickRef.current = true;
     setTimeout(() => (suppressClickRef.current = false), 0);
 
-    const delta = drag.currentX - drag.baseX;
-    let steps = Math.round(delta / 90);
-    if (steps === 0 && Math.abs(delta) > FLICK_THRESHOLD_DEG) {
-      steps = Math.sign(delta);
+    let steps = Math.round(drag.angle / 90);
+    if (steps === 0 && Math.abs(drag.angle) > FLICK_THRESHOLD_DEG) {
+      steps = Math.sign(drag.angle);
     }
-    const target = { x: drag.baseX + steps * 90, y: 0 };
 
-    const cube = cubeRef.current;
-    if (cube) {
-      delete cube.dataset.dragging;
-      applyRotationVars(cube, target);
-    }
-    rotateTo(target);
+    rotateTo(multiply(rotation(drag.axis, steps * 90), drag.base), {
+      snap: true,
+    });
   };
 
   const onClickCapture = (event: React.MouseEvent) => {
@@ -193,13 +280,19 @@ const useCubeRotation = () => {
   };
 
   return {
-    coordinate,
-    activeFace: getActiveFace(coordinate),
-    capAngle,
+    orientation,
+    activeFace: getActiveFace(orientation),
+    contentAngles,
     isTurning,
     turn,
     goTo,
     cubeRef,
+    /**
+     * Estilo inicial do cubo. É constante de propósito: depois da montagem a
+     * orientação é pintada direto no DOM a cada quadro, e o React não pode
+     * sobrescrevê-la ao re-renderizar.
+     */
+    cubeStyle: { [ORIENTATION_VAR]: IDENTITY_MATRIX3D } as React.CSSProperties,
     dragHandlers: {
       onPointerDown,
       onPointerMove,

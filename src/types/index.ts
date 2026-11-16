@@ -12,11 +12,6 @@ export interface RotationController {
   contentAngle?: number;
 }
 
-export interface Coordinate {
-  x: number;
-  y: number;
-}
-
 export interface Paintable {
   background?: string;
   color: string;

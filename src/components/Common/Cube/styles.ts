@@ -44,16 +44,13 @@ export const Scene = styled.div<{ $isTurning: boolean }>`
 `;
 
 /**
- * Não gira: só repassa as variáveis de rotação para as faces
- * (ver ROTATION_VARS em useCubeRotation).
+ * Não gira: só repassa a orientação (ORIENTATION_VAR) para as faces. Se o
+ * próprio elemento girasse, em 90° ficaria de perfil e o navegador deixaria
+ * de entregar cliques às faces.
  */
 export const Cube = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-
-  &[data-dragging="true"] > * {
-    transition: none;
-  }
 `;
