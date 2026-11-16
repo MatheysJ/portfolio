@@ -1,40 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Portfólio · Cubo 3D
 
-## Getting Started
+Portfólio pessoal em uma única página: um cubo 3D com uma seção do currículo em cada face (Início, Experiência, Projetos, Stack, Formação e Contato). O cubo pode ser girado arrastando, pelas setas do teclado, pelas setas nas bordas de cada face ou pela navegação abaixo dele. Cada face tem uma URL própria (`#experiencia`, `#contato`…).
 
-First, run the development server:
+## Stack
+
+- **Next.js 15** (Pages Router, página estática) · **React 19** · **TypeScript** em modo `strict`
+- **Chakra UI 3** para componentes e **styled-components** para a geometria do cubo
+- **Jest** + **Testing Library** para testes
+- **GitHub Actions** + **Lighthouse CI** como portão de qualidade, com deploy na Cloudflare
+
+## Como rodar
+
+Requer Node.js 22 e Yarn 1.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+yarn install
+yarn dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Script            | O que faz                                              |
+| ----------------- | ------------------------------------------------------ |
+| `yarn build`      | Build de produção                                      |
+| `yarn start`      | Serve o build de produção                              |
+| `yarn lint`       | ESLint                                                 |
+| `yarn typecheck`  | Checagem de tipos (`tsc --noEmit`)                     |
+| `yarn test`       | Testes                                                 |
+| `yarn test:ci`    | Testes com cobertura                                   |
+| `yarn lighthouse` | Lighthouse CI contra o build (rode `yarn build` antes) |
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+A variável `NEXT_PUBLIC_SITE_URL` (ex.: `https://meudominio.dev`) habilita a URL canônica e o `og:url`.
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Como o cubo funciona
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+A parte interessante do projeto está em [`src/utils/orientation`](src/utils/orientation/index.ts) e [`src/hooks/useCubeRotation`](src/hooks/useCubeRotation/index.ts).
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Orientação como matriz, não como ângulos.** Uma abordagem comum é guardar `rotateX` e `rotateY` e somar 90° a cada giro. Isso quebra assim que o cubo sai do "anel" horizontal: depois de subir para o topo, girar para a direita passa a girar em torno do eixo errado. Aqui a orientação é uma matriz de rotação 3×3, e cada giro multiplica a orientação atual por uma rotação de 90° no eixo *da tela*. Qualquer sequência de giros funciona, e a face visível é derivada da matriz (a face cuja normal aponta mais para o usuário).
 
-## Learn More
+**Conteúdo sempre em pé.** Ao chegar a uma face por um caminho diferente, o conteúdo dela pode estar de lado ou de cabeça para baixo. `getContentAngle` calcula, a partir da matriz, quanto girar o conteúdo (em múltiplos de 90°) para que ele chegue legível.
 
-To learn more about Next.js, take a look at the following resources:
+**Animação por quaternions.** A interpolação de `matrix3d()` feita pelo CSS não garante o menor caminho em todos os navegadores: o cubo poderia girar 270° pelo lado errado. Por isso a animação roda em JS: a matriz vira um quaternion e é interpolada com *slerp* pelo menor caminho. A cada quadro, a orientação é escrita direto numa variável CSS (`--cube-orientation`), sem re-render do React.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+**Interação.** O eixo do arraste é decidido pela direção dominante do movimento. Arrastes curtos e rápidos também trocam de face. Um arraste não dispara o clique dos links da face. Em telas de toque, o arraste vertical fica com a rolagem do conteúdo. As animações respeitam `prefers-reduced-motion`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Testes
 
-## Deploy on Vercel
+Os testes de `orientation` são, em boa parte, baseados em propriedades: sequências aleatórias de giros (com semente fixa, para serem reprodutíveis) verificam que quatro giros voltam ao início, que qualquer face é alcançável de qualquer orientação e que a face ativa sempre termina em pé. Os testes do hook simulam arraste com ponteiro, teclado e a animação com timers falsos.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## CI e deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+O workflow em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda lint, checagem de tipos e testes, depois faz o build e roda o Lighthouse. O pipeline falha se performance, acessibilidade, boas práticas ou SEO ficarem abaixo de 90 ([`lighthouserc.json`](lighthouserc.json)). Só com tudo verde, e só na branch padrão, o deploy de produção é disparado na Cloudflare.
+
+## Estrutura
+
+```
+src/
+├── components/Common/   # Cubo, faces, navegação e botões
+├── config/              # SEO (meta tags, JSON-LD) e tema do Chakra
+├── constants/           # Conteúdo do currículo, faces e direções
+├── hooks/               # useCubeRotation, useHashNavigation
+├── pages/               # Página única + _app/_document
+└── utils/orientation/   # Matrizes, quaternions e slerp
+```
+
+O conteúdo do currículo fica todo em [`src/constants/content.ts`](src/constants/content.ts).

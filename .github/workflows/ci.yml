@@ -24,12 +24,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: yarn
 
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run test:ci
+      - run: yarn install --frozen-lockfile
+      - run: yarn lint
+      - run: yarn typecheck
+      - run: yarn test:ci
 
       - name: Publicar cobertura
         if: always()
@@ -48,14 +48,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: yarn
 
-      - run: npm ci
-      - run: npm run build
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
 
       # Falha o pipeline se performance, acessibilidade, boas práticas ou SEO
       # ficarem abaixo de 90 (metas em lighthouserc.json).
-      - run: npm run lighthouse
+      - run: yarn lighthouse
 
       - name: Publicar relatórios do Lighthouse
         if: always()
