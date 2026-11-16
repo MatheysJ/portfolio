@@ -21,5 +21,6 @@
 	"route": {
 		"pattern": "portfolio.matheus-junior.xyz/*",
 		"zone_name": "matheus-junior.xyz"
-	}
+	},
+  "previews": {}
 }
