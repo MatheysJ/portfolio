@@ -1,12 +1,12 @@
 import React from "react";
-import { Flex, Link, Text } from "@chakra-ui/react";
 import { FACES } from "@/constants/faces";
-import { PERSONAL_PROJECT } from "@/constants/content";
 import { Chip } from "@/components/Common";
+import { Flex, Link, Text } from "@chakra-ui/react";
+import { PERSONAL_PROJECT } from "@/constants/content";
 
+import { useFaceFocus } from "../Face/context";
 import { CubeProjectsProps } from "./types";
 import { CubeFace } from "..";
-import { useFaceFocus } from "../Face/context";
 
 const ProjectLink: React.FC<{ href: string; label: string }> = ({
   href,

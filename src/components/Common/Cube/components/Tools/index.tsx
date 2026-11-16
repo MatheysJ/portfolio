@@ -1,8 +1,8 @@
 import React from "react";
-import { Flex, Text } from "@chakra-ui/react";
 import { FACES } from "@/constants/faces";
-import { STACK } from "@/constants/content";
 import { Chip } from "@/components/Common";
+import { STACK } from "@/constants/content";
+import { Flex, Text } from "@chakra-ui/react";
 
 import { CubeToolsProps } from "./types";
 import { CubeFace } from "..";
