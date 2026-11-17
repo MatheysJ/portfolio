@@ -40,3 +40,10 @@ next-env.d.ts
 
 # lighthouse ci
 /.lighthouseci
+
+# opennextjs-cloudflare and wrangler
+.open-next
+.wrangler
+
+# AI
+.claude
