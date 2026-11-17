@@ -1,6 +1,8 @@
+import { ReactNode } from "react";
 import { FACES } from "@/constants/faces";
 import { DIRECTIONS } from "@/constants/directions";
-import { ReactNode } from "react";
+
+export type Axis = "x" | "y";
 
 export interface ChildrenAsProps {
   children?: ReactNode;

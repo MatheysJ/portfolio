@@ -1,38 +1,18 @@
 import React from "react";
-import { FACES } from "@/constants/faces";
-import { Chip } from "@/components/Common";
-import { Flex, Link, Text } from "@chakra-ui/react";
+import { Flex, Text } from "@chakra-ui/react";
+import Chip from "@/components/Common/Chip";
 import { PERSONAL_PROJECT } from "@/constants/content";
 
-import { useFaceFocus } from "../Face/context";
-import { CubeProjectsProps } from "./types";
-import { CubeFace } from "..";
+import Face from "../Face";
+import { CubeFaceContentProps } from "../Face/types";
+import FaceLink from "../FaceLink";
+import SectionLabel from "../SectionLabel";
 
-const ProjectLink: React.FC<{ href: string; label: string }> = ({
-  href,
-  label,
-}) => {
-  const focus = useFaceFocus();
-
-  return (
-    <Link
-      {...focus}
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      color="inherit"
-      _hover={{ color: "teal.300" }}
-    >
-      {label}
-    </Link>
-  );
-};
-
-const Projects: React.FC<CubeProjectsProps> = (props) => {
+const Projects: React.FC<CubeFaceContentProps> = (props) => {
   const { title, description, stack, recognition, link } = PERSONAL_PROJECT;
 
   return (
-    <CubeFace {...props} face={FACES.TOP} title="PROJETOS">
+    <Face {...props}>
       <Flex direction="column" gap="3">
         <Flex direction="column">
           <Text color="teal.400">
@@ -53,13 +33,11 @@ const Projects: React.FC<CubeProjectsProps> = (props) => {
         <Text color="whiteAlpha.800">{recognition}</Text>
 
         <Flex direction="column">
-          <Text fontSize="0.85em" color="teal.400">
-            Código (gateway)
-          </Text>
-          <ProjectLink href={link.href} label={link.label} />
+          <SectionLabel>Código (gateway)</SectionLabel>
+          <FaceLink href={link.href}>{link.label}</FaceLink>
         </Flex>
       </Flex>
-    </CubeFace>
+    </Face>
   );
 };
 

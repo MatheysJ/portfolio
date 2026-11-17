@@ -8,13 +8,13 @@ import {
 } from "@testing-library/react";
 import { FACES } from "@/constants/faces";
 import { DIRECTIONS } from "@/constants/directions";
-import { TURNS, toMatrix3d } from "@/utils/orientation";
+import { ORIENTATION_VAR } from "@/constants/cube";
+import { IDENTITY_MATRIX3D, TURNS, toMatrix3d } from "@/utils/orientation";
 
-import useCubeRotation, { IDENTITY_MATRIX3D, ORIENTATION_VAR } from ".";
+import useCubeRotation from ".";
 
 const SIZE = 500;
 
-// jsdom não implementa PointerEvent nem pointer capture.
 class PointerEventPolyfill extends MouseEvent {
   pointerId: number;
   pointerType: string;
@@ -35,7 +35,7 @@ describe("useCubeRotation", () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it("começa na face frontal, com o conteúdo em pé", () => {
+  it("starts on the front face with the content upright", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     expect(result.current.activeFace).toBe(FACES.FRONT);
@@ -43,7 +43,7 @@ describe("useCubeRotation", () => {
     expect(result.current.isTurning).toBe(false);
   });
 
-  it("marca o giro em andamento e libera após o feedback", () => {
+  it("flags the turn in progress and clears it after the feedback", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.turn(DIRECTIONS.RIGHT));
@@ -54,14 +54,14 @@ describe("useCubeRotation", () => {
     expect(result.current.isTurning).toBe(false);
   });
 
-  it("não dispara giro quando a face já está de frente", () => {
+  it("does not turn when the face is already in front", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.goTo(FACES.FRONT));
     expect(result.current.isTurning).toBe(false);
   });
 
-  it("gira em todas as direções, inclusive depois de sair do anel", () => {
+  it("turns in every direction, even after leaving the ring", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.turn(DIRECTIONS.UP));
@@ -77,7 +77,7 @@ describe("useCubeRotation", () => {
     expect(result.current.activeFace).toBe(FACES.BACK);
   });
 
-  it("endireita o conteúdo da face que chega", () => {
+  it("straightens the content of the incoming face", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.goTo(FACES.RIGHT));
@@ -87,7 +87,7 @@ describe("useCubeRotation", () => {
     expect(result.current.contentAngles[FACES.TOP]).toBe(270);
   });
 
-  it("navega até qualquer face, de qualquer posição", () => {
+  it("navigates to any face from any position", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     act(() => result.current.turn(DIRECTIONS.DOWN));
@@ -99,7 +99,7 @@ describe("useCubeRotation", () => {
     });
   });
 
-  it("responde às setas do teclado", () => {
+  it("responds to the keyboard arrows", () => {
     const { result } = renderHook(() => useCubeRotation());
 
     act(() => {
@@ -113,7 +113,7 @@ describe("useCubeRotation", () => {
     expect(result.current.activeFace).toBe(FACES.TOP);
   });
 
-  it("ignora o teclado com modificadores ou em campos de texto", () => {
+  it("ignores the keyboard with modifiers or inside text fields", () => {
     const { result } = renderHook(() => useCubeRotation());
     const input = document.createElement("input");
     document.body.appendChild(input);
@@ -128,7 +128,7 @@ describe("useCubeRotation", () => {
   });
 });
 
-describe("useCubeRotation · cubo no DOM", () => {
+describe("useCubeRotation · cube in the DOM", () => {
   const onChildClick = jest.fn();
 
   const Harness = () => {
@@ -174,7 +174,7 @@ describe("useCubeRotation · cubo no DOM", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     onChildClick.mockClear();
-    // jsdom não calcula layout: simula o cubo com SIZE px de largura.
+    // jsdom has no layout, so the cube width is mocked.
     jest
       .spyOn(HTMLElement.prototype, "getBoundingClientRect")
       .mockReturnValue({ width: SIZE, height: SIZE } as DOMRect);
@@ -185,7 +185,7 @@ describe("useCubeRotation · cubo no DOM", () => {
     jest.useRealTimers();
   });
 
-  it("anima a orientação até o alvo exato", () => {
+  it("animates the orientation to the exact target", () => {
     render(<Harness />);
     expect(orientationOf()).toBe(IDENTITY_MATRIX3D);
 
@@ -198,21 +198,21 @@ describe("useCubeRotation · cubo no DOM", () => {
     expect(orientationOf()).toBe(toMatrix3d(TURNS[DIRECTIONS.RIGHT]));
   });
 
-  it("troca de face ao arrastar mais da metade", () => {
+  it("changes face when dragged past halfway", () => {
     render(<Harness />);
 
     drag([400, 0], [100, 0]);
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.RIGHT);
   });
 
-  it("troca de face com um arraste curto e decidido", () => {
+  it("changes face with a short, quick flick", () => {
     render(<Harness />);
 
     drag([100, 0], [180, 0]);
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.LEFT);
   });
 
-  it("volta para a mesma face em arrastes pequenos", () => {
+  it("snaps back to the same face on small drags", () => {
     render(<Harness />);
 
     drag([100, 0], [115, 0]);
@@ -222,32 +222,31 @@ describe("useCubeRotation · cubo no DOM", () => {
     expect(orientationOf()).toBe(IDENTITY_MATRIX3D);
   });
 
-  it("gira na vertical ao arrastar com o mouse", () => {
+  it("turns vertically when dragging with the mouse", () => {
     render(<Harness />);
 
     drag([0, 100], [0, 400]);
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.TOP);
   });
 
-  it("deixa o arraste vertical do touch para a rolagem do conteúdo", () => {
+  it("leaves vertical touch drags to content scrolling", () => {
     render(<Harness />);
 
     drag([0, 100], [0, 400], "touch");
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.FRONT);
   });
 
-  it("gira na horizontal depois de chegar ao topo", () => {
+  it("turns horizontally after reaching the top", () => {
     render(<Harness />);
 
     drag([0, 100], [0, 400]);
     act(() => jest.runAllTimers());
     drag([400, 0], [100, 0]);
 
-    // No topo, a face à direita na tela continua sendo a RIGHT.
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.RIGHT);
   });
 
-  it("não confunde arraste com clique nos elementos da face", () => {
+  it("does not mistake a drag for a click on face elements", () => {
     render(<Harness />);
 
     drag([400, 0], [100, 0]);
@@ -259,7 +258,7 @@ describe("useCubeRotation · cubo no DOM", () => {
     expect(onChildClick).toHaveBeenCalledTimes(1);
   });
 
-  it("mantém o clique quando o ponteiro quase não se move", () => {
+  it("keeps the click when the pointer barely moves", () => {
     render(<Harness />);
     const button = screen.getByText("link");
 

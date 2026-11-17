@@ -24,7 +24,6 @@ const ALL_DIRECTIONS = Object.values(DIRECTIONS);
 const turnAll = (directions: DIRECTIONS[], start: Matrix = IDENTITY) =>
   directions.reduce((m, direction) => multiply(TURNS[direction], m), start);
 
-/** Gira um vetor da tela (y para baixo) no sentido horário, como o rotate() do CSS. */
 const rotateOnScreen = ([x, y]: readonly number[], degrees: number) => {
   const radians = (degrees * Math.PI) / 180;
   return [
@@ -33,7 +32,6 @@ const rotateOnScreen = ([x, y]: readonly number[], degrees: number) => {
   ];
 };
 
-/** O conteúdo da face ativa, já com o ângulo aplicado, aponta para cima? */
 const isActiveFaceUpright = (orientation: Matrix) => {
   const face = getActiveFace(orientation);
   const placement: Record<FACES, Matrix> = {
@@ -49,29 +47,28 @@ const isActiveFaceUpright = (orientation: Matrix) => {
   return shown[0] === 0 && shown[1] === -1;
 };
 
-/** Gerador pseudoaleatório determinístico, para testes reprodutíveis. */
 const seeded = (seed: number) => () => {
   seed = (seed * 1664525 + 1013904223) % 4294967296;
   return seed / 4294967296;
 };
 
-describe("giros", () => {
+describe("turns", () => {
   it.each([
     [DIRECTIONS.RIGHT, FACES.RIGHT],
     [DIRECTIONS.LEFT, FACES.LEFT],
     [DIRECTIONS.UP, FACES.TOP],
     [DIRECTIONS.DOWN, FACES.BOTTOM],
-  ])("%s a partir do início mostra %s", (direction, face) => {
+  ])("%s from the start shows %s", (direction, face) => {
     expect(getActiveFace(turnAll([direction]))).toBe(face);
   });
 
-  it("dois giros na mesma direção mostram a face oposta", () => {
+  it("two turns in the same direction show the opposite face", () => {
     ALL_DIRECTIONS.forEach((direction) => {
       expect(getActiveFace(turnAll([direction, direction]))).toBe(FACES.BACK);
     });
   });
 
-  it("quatro giros na mesma direção voltam à mesma face, em qualquer posição", () => {
+  it("four turns in the same direction return to the same face, from any position", () => {
     const random = seeded(42);
 
     for (let run = 0; run < 50; run++) {
@@ -87,12 +84,12 @@ describe("giros", () => {
     }
   });
 
-  it("giros opostos se anulam", () => {
+  it("opposite turns cancel each other out", () => {
     expect(turnAll([DIRECTIONS.UP, DIRECTIONS.DOWN])).toEqual(IDENTITY);
     expect(turnAll([DIRECTIONS.LEFT, DIRECTIONS.RIGHT])).toEqual(IDENTITY);
   });
 
-  it("mantém valores exatos (sem resíduo de ponto flutuante)", () => {
+  it("keeps exact values (no floating-point residue)", () => {
     const m = turnAll([
       DIRECTIONS.UP,
       DIRECTIONS.RIGHT,
@@ -105,24 +102,24 @@ describe("giros", () => {
 });
 
 describe("getContentAngle", () => {
-  it("mantém o conteúdo em pé nos giros simples", () => {
+  it("keeps the content upright on simple turns", () => {
     expect(getContentAngle(FACES.TOP, turnAll([DIRECTIONS.UP]))).toBe(0);
     expect(getContentAngle(FACES.BOTTOM, turnAll([DIRECTIONS.DOWN]))).toBe(0);
     expect(getContentAngle(FACES.RIGHT, turnAll([DIRECTIONS.RIGHT]))).toBe(0);
   });
 
-  it("endireita o topo quando se chega a ele por uma face lateral", () => {
+  it("straightens the top when reached from a side face", () => {
     const orientation = turnAll([DIRECTIONS.RIGHT, DIRECTIONS.UP]);
     expect(getActiveFace(orientation)).toBe(FACES.TOP);
     expect(getContentAngle(FACES.TOP, orientation)).toBe(270);
   });
 
-  it("endireita uma face lateral alcançada depois de passar pelo topo", () => {
+  it("straightens a side face reached after passing through the top", () => {
     const orientation = turnAll([DIRECTIONS.UP, DIRECTIONS.RIGHT]);
     expect(isActiveFaceUpright(orientation)).toBe(true);
   });
 
-  it("deixa a face ativa em pé após qualquer sequência de giros", () => {
+  it("leaves the active face upright after any sequence of turns", () => {
     const random = seeded(7);
 
     for (let run = 0; run < 300; run++) {
@@ -138,11 +135,11 @@ describe("getContentAngle", () => {
 });
 
 describe("getTurnToFace", () => {
-  it("não gira quando a face já está de frente", () => {
+  it("does not turn when the face is already in front", () => {
     expect(getTurnToFace(FACES.FRONT, IDENTITY)).toBeNull();
   });
 
-  it("leva qualquer face à frente a partir de qualquer orientação", () => {
+  it("brings any face to the front from any orientation", () => {
     const random = seeded(3);
 
     for (let run = 0; run < 50; run++) {
@@ -158,14 +155,14 @@ describe("getTurnToFace", () => {
     }
   });
 
-  it("usa um único giro de 90° para faces vizinhas", () => {
+  it("uses a single 90° turn for neighboring faces", () => {
     expect(getTurnToFace(FACES.RIGHT, IDENTITY)).toEqual(TURNS[DIRECTIONS.RIGHT]);
     expect(getTurnToFace(FACES.TOP, IDENTITY)).toEqual(TURNS[DIRECTIONS.UP]);
   });
 });
 
 describe("quaternions", () => {
-  it("convertem matriz → quaternion → matriz sem perda", () => {
+  it("convert matrix → quaternion → matrix losslessly", () => {
     const random = seeded(11);
 
     for (let run = 0; run < 50; run++) {
@@ -176,8 +173,8 @@ describe("quaternions", () => {
     }
   });
 
-  it("interpolam pelo menor caminho (giro de 90°, nunca 270°)", () => {
-    // Orientações que geram quaternions de sinais opostos (produto escalar < 0).
+  it("interpolate along the shortest path (90° turn, never 270°)", () => {
+    // These orientations yield quaternions with a negative dot product.
     const from = turnAll([DIRECTIONS.UP, DIRECTIONS.UP]);
     const to = multiply(TURNS[DIRECTIONS.UP], from);
 
@@ -188,7 +185,7 @@ describe("quaternions", () => {
     expect(isSameMatrix(middle, halfway)).toBe(true);
   });
 
-  it("chegam exatamente ao alvo no fim da interpolação", () => {
+  it("reach the exact target at the end of the interpolation", () => {
     const from = IDENTITY;
     const to = TURNS[DIRECTIONS.RIGHT];
     expect(
@@ -201,13 +198,13 @@ describe("quaternions", () => {
 });
 
 describe("toMatrix3d", () => {
-  it("gera a identidade no formato do CSS", () => {
+  it("outputs the identity in CSS format", () => {
     expect(toMatrix3d(IDENTITY)).toBe(
       "1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1",
     );
   });
 
-  it("transpõe a matriz (o CSS lê coluna a coluna)", () => {
+  it("transposes the matrix (CSS reads column by column)", () => {
     expect(toMatrix3d(rotationY(90))).toBe(
       "0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1",
     );

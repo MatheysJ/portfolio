@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
-  // Mantém o Emotion (usado pelo Chakra) fora do bundle do servidor no Worker.
   serverExternalPackages: [
     "@emotion/cache",
     "@emotion/react",

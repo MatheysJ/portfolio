@@ -1,9 +1,5 @@
 import styled from "styled-components";
 
-/**
- * Tamanho do cubo calculado só com CSS: o HTML gerado no servidor já sai com o
- * tamanho certo para qualquer tela, sem depender de JavaScript.
- */
 export const CUBE_SIZE = "var(--cube-size)";
 
 export const Container = styled.div`
@@ -17,7 +13,6 @@ export const Container = styled.div`
   height: ${CUBE_SIZE};
   perspective: calc(${CUBE_SIZE} * 3);
   cursor: grab;
-  /* Permite rolar o conteúdo das faces na vertical e arrastar o cubo na horizontal. */
   touch-action: pan-y;
 
   &[data-dragging="true"] {
@@ -26,10 +21,7 @@ export const Container = styled.div`
   }
 `;
 
-/**
- * Recuo de meio cubo no eixo Z: a face ativa fica exatamente no plano da tela,
- * sem ampliação pela perspectiva (texto nítido em repouso).
- */
+// Pulled back half a cube so the active face sits on the screen plane and text stays sharp.
 export const Scene = styled.div<{ $isTurning: boolean }>`
   width: 100%;
   height: 100%;
@@ -43,11 +35,7 @@ export const Scene = styled.div<{ $isTurning: boolean }>`
   }
 `;
 
-/**
- * Não gira: só repassa a orientação (ORIENTATION_VAR) para as faces. Se o
- * próprio elemento girasse, em 90° ficaria de perfil e o navegador deixaria
- * de entregar cliques às faces.
- */
+// Must not rotate itself: edge-on at 90°, the browser stops delivering clicks to the faces.
 export const Cube = styled.div`
   position: relative;
   width: 100%;

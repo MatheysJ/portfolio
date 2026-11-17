@@ -1,20 +1,18 @@
 import React from "react";
-import { FACES } from "@/constants/faces";
-import { Chip } from "@/components/Common";
+import { Flex } from "@chakra-ui/react";
+import Chip from "@/components/Common/Chip";
 import { STACK } from "@/constants/content";
-import { Flex, Text } from "@chakra-ui/react";
 
-import { CubeToolsProps } from "./types";
-import { CubeFace } from "..";
+import Face from "../Face";
+import { CubeFaceContentProps } from "../Face/types";
+import SectionLabel from "../SectionLabel";
 
-const Tools: React.FC<CubeToolsProps> = (props) => (
-  <CubeFace {...props} face={FACES.BACK} title="STACK">
+const Tools: React.FC<CubeFaceContentProps> = (props) => (
+  <Face {...props}>
     <Flex direction="column" gap="2.5">
       {STACK.map(({ group, items }) => (
         <Flex key={group} direction="column" gap="1">
-          <Text color="teal.400" fontSize="0.85em">
-            {group}
-          </Text>
+          <SectionLabel>{group}</SectionLabel>
           <Flex as="ul" wrap="wrap" gap="1.5">
             {items.map((item) => (
               <Chip key={item}>{item}</Chip>
@@ -23,7 +21,7 @@ const Tools: React.FC<CubeToolsProps> = (props) => (
         </Flex>
       ))}
     </Flex>
-  </CubeFace>
+  </Face>
 );
 
 export default Tools;

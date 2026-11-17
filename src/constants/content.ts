@@ -1,11 +1,6 @@
-/**
- * Conteúdo do portfólio centralizado em um único lugar.
- * Sem nome de cliente nem nomes de serviços internos. A métrica de LCP vem do
- * Chrome UX Report, que é público.
- */
-
 export const PROFILE = {
   name: "MATHEUS J.",
+  givenName: "Matheus",
   displayName: "Matheus J.",
   role: "SOFTWARE ENGINEER",
   jobTitle: "Engenheiro de Software Full Stack",
@@ -28,6 +23,16 @@ export const CONTACT = {
     href: "https://github.com/MatheysJ",
   },
 };
+
+export const CONTACT_LINKS = [
+  { label: "E-mail", value: CONTACT.email, href: `mailto:${CONTACT.email}` },
+  {
+    label: "LinkedIn",
+    value: CONTACT.linkedin.label,
+    href: CONTACT.linkedin.href,
+  },
+  { label: "GitHub", value: CONTACT.github.label, href: CONTACT.github.href },
+];
 
 export const EXPERIENCE = {
   company: "Compass.UOL",

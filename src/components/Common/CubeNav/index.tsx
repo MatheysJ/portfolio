@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Flex } from "@chakra-ui/react";
-import { FACES_DATA, NAV_ORDER } from "@/constants/faces";
+import { FACES_DATA, FACE_ORDER } from "@/constants/faces";
 
 import { CubeNavProps } from "./types";
 
@@ -12,7 +12,7 @@ const CubeNav: React.FC<CubeNavProps> = ({ activeFace, onSelect }) => (
     justifyContent="center"
     gap="1"
   >
-    {NAV_ORDER.map((face) => {
+    {FACE_ORDER.map((face) => {
       const isActive = face === activeFace;
       const { label, slug } = FACES_DATA[face];
 

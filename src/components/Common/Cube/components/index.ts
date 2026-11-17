@@ -5,3 +5,6 @@ export { default as CubeContact } from "./Contact";
 export { default as CubeProjects } from "./Projects";
 export { default as CubeEducation } from "./Education";
 export { default as CubeFace } from "./Face";
+export { default as FaceLink } from "./FaceLink";
+export { default as SectionLabel } from "./SectionLabel";
+export type { CubeFaceContentProps } from "./Face/types";

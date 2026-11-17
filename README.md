@@ -1,5 +1,7 @@
 # Portfólio · Cubo 3D
 
+**https://matheus-junior.xyz**
+
 Portfólio pessoal em uma única página: um cubo 3D com uma seção do currículo em cada face (Início, Experiência, Projetos, Stack, Formação e Contato). O cubo pode ser girado arrastando, pelas setas do teclado, pelas setas nas bordas de cada face ou pela navegação abaixo dele. Cada face tem uma URL própria (`#experiencia`, `#contato`…).
 
 ## Stack
@@ -28,17 +30,15 @@ yarn dev          # http://localhost:3000
 | `yarn test:ci`    | Testes com cobertura                                   |
 | `yarn lighthouse` | Lighthouse CI contra o build (rode `yarn build` antes) |
 
-A variável `NEXT_PUBLIC_SITE_URL` (ex.: `https://meudominio.dev`) habilita a URL canônica e o `og:url`.
-
 ## Como o cubo funciona
 
 A parte interessante do projeto está em [`src/utils/orientation`](src/utils/orientation/index.ts) e [`src/hooks/useCubeRotation`](src/hooks/useCubeRotation/index.ts).
 
-**Orientação como matriz, não como ângulos.** Uma abordagem comum é guardar `rotateX` e `rotateY` e somar 90° a cada giro. Isso quebra assim que o cubo sai do "anel" horizontal: depois de subir para o topo, girar para a direita passa a girar em torno do eixo errado. Aqui a orientação é uma matriz de rotação 3×3, e cada giro multiplica a orientação atual por uma rotação de 90° no eixo *da tela*. Qualquer sequência de giros funciona, e a face visível é derivada da matriz (a face cuja normal aponta mais para o usuário).
+**Orientação como matriz, não como ângulos.** Uma abordagem comum é guardar `rotateX` e `rotateY` e somar 90° a cada giro. Isso quebra assim que o cubo sai do "anel" horizontal: depois de subir para o topo, girar para a direita passa a girar em torno do eixo errado. Aqui a orientação é uma matriz de rotação 3×3, e cada giro multiplica a orientação atual por uma rotação de 90° no eixo _da tela_. Qualquer sequência de giros funciona, e a face visível é derivada da matriz (a face cuja normal aponta mais para o usuário).
 
 **Conteúdo sempre em pé.** Ao chegar a uma face por um caminho diferente, o conteúdo dela pode estar de lado ou de cabeça para baixo. `getContentAngle` calcula, a partir da matriz, quanto girar o conteúdo (em múltiplos de 90°) para que ele chegue legível.
 
-**Animação por quaternions.** A interpolação de `matrix3d()` feita pelo CSS não garante o menor caminho em todos os navegadores: o cubo poderia girar 270° pelo lado errado. Por isso a animação roda em JS: a matriz vira um quaternion e é interpolada com *slerp* pelo menor caminho. A cada quadro, a orientação é escrita direto numa variável CSS (`--cube-orientation`), sem re-render do React.
+**Animação por quaternions.** A interpolação de `matrix3d()` feita pelo CSS não garante o menor caminho em todos os navegadores: o cubo poderia girar 270° pelo lado errado. Por isso a animação roda em JS: a matriz vira um quaternion e é interpolada com _slerp_ pelo menor caminho. A cada quadro, a orientação é escrita direto numa variável CSS (`--cube-orientation`), sem re-render do React.
 
 **Interação.** O eixo do arraste é decidido pela direção dominante do movimento. Arrastes curtos e rápidos também trocam de face. Um arraste não dispara o clique dos links da face. Em telas de toque, o arraste vertical fica com a rolagem do conteúdo. As animações respeitam `prefers-reduced-motion`.
 
@@ -48,18 +48,38 @@ Os testes de `orientation` são, em boa parte, baseados em propriedades: sequên
 
 ## CI e deploy
 
-O workflow em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda lint, checagem de tipos e testes, depois faz o build e roda o Lighthouse. O pipeline falha se performance, acessibilidade, boas práticas ou SEO ficarem abaixo de 90 ([`lighthouserc.json`](lighthouserc.json)). Só com tudo verde, e só na branch padrão, o deploy de produção é disparado na Cloudflare.
+O workflow em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) só valida, sem credenciais da Cloudflare:
+
+- lint, checagem de tipos e testes;
+- build e Lighthouse, falhando se performance, acessibilidade, boas práticas ou SEO ficarem abaixo de 90 ([`lighthouserc.json`](lighthouserc.json));
+- build do Worker com [OpenNext](https://opennext.js.org/cloudflare) e `wrangler deploy --dry-run`, o mesmo artefato publicado em produção.
+
+O deploy é feito pela integração **Workers Builds** da Cloudflare, que builda e publica o Worker `portfolio` ([`wrangler.jsonc`](wrangler.jsonc)) a cada push. Para publicar manualmente ou testar o Worker localmente:
+
+```bash
+yarn preview   # build com OpenNext + Worker local
+yarn deploy    # build com OpenNext + deploy (requer login no Wrangler)
+```
 
 ## Estrutura
 
 ```
 src/
-├── components/Common/   # Cubo, faces, navegação e botões
-├── config/              # SEO (meta tags, JSON-LD) e tema do Chakra
-├── constants/           # Conteúdo do currículo, faces e direções
-├── hooks/               # useCubeRotation, useHashNavigation
+├── components/
+│   ├── Common/          # Cubo, faces, navegação, setas e chips
+│   └── SeoHead/         # Meta tags, Open Graph e JSON-LD
+├── config/              # URL do site, SEO e tema do Chakra
+├── constants/           # Conteúdo, faces, direções, geometria e tempos de animação
+├── hooks/
+│   ├── useCubeRotation/ # Estado do cubo, animação (slerp) e arraste
+│   ├── useArrowKeys/    # Setas do teclado
+│   └── useHashNavigation/
 ├── pages/               # Página única + _app/_document
-└── utils/orientation/   # Matrizes, quaternions e slerp
+└── utils/
+    ├── orientation/     # matrix, quaternion e regras do cubo
+    └── …                # math, easing, dom, faces, jsonLd
 ```
+
+A posição de cada face no cubo fica em um só lugar ([`constants/cube.ts`](src/constants/cube.ts)) e alimenta tanto o CSS das faces quanto o cálculo da orientação. Para mudar a face onde cada seção aparece, basta editar o mapa `FACE_CONTENT` em [`Cube/index.tsx`](src/components/Common/Cube/index.tsx).
 
 O conteúdo do currículo fica todo em [`src/constants/content.ts`](src/constants/content.ts).
