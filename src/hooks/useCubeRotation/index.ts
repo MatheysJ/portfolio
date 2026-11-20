@@ -19,6 +19,7 @@ import {
 
 import useArrowKeys from "../useArrowKeys";
 import useCubeDrag from "./useCubeDrag";
+import useFaceScroller from "./useFaceScroller";
 import useOrientationAnimation, {
   AnimateOptions,
 } from "./useOrientationAnimation";
@@ -92,8 +93,15 @@ const useCubeRotation = () => {
 
   useEffect(() => () => clearTimeout(turnTimeoutRef.current), []);
 
+  const getCurrentFace = useCallback(
+    () => getActiveFace(orientationRef.current),
+    [],
+  );
+  const getActiveScroller = useFaceScroller(cubeRef, getCurrentFace);
+
   const dragHandlers = useCubeDrag({
     getOrientation: () => orientationRef.current,
+    getScroller: getActiveScroller,
     onStart: (axis, base) => {
       stop();
       straightenFaces([

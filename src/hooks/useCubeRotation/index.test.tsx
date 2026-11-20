@@ -131,13 +131,40 @@ describe("useCubeRotation", () => {
 describe("useCubeRotation · cube in the DOM", () => {
   const onChildClick = jest.fn();
 
-  const Harness = () => {
+  const scroll = { top: 0 };
+
+  const Harness = ({ scrollable = false }: { scrollable?: boolean }) => {
     const { activeFace, cubeRef, cubeStyle, dragHandlers, turn } =
       useCubeRotation();
 
     return (
       <div data-testid="container" {...dragHandlers}>
-        <div data-testid="cube" ref={cubeRef} style={cubeStyle} />
+        <div data-testid="cube" ref={cubeRef} style={cubeStyle}>
+          <section id="inicio">
+            <div
+              data-face-scroll=""
+              data-testid="scroller"
+              ref={(element) => {
+                if (!element) return;
+                Object.defineProperty(element, "scrollHeight", {
+                  configurable: true,
+                  value: scrollable ? 900 : 300,
+                });
+                Object.defineProperty(element, "clientHeight", {
+                  configurable: true,
+                  value: 300,
+                });
+                Object.defineProperty(element, "scrollTop", {
+                  configurable: true,
+                  get: () => scroll.top,
+                  set: (value: number) => {
+                    scroll.top = Math.max(0, Math.min(value, 600));
+                  },
+                });
+              }}
+            />
+          </section>
+        </div>
         <button onClick={onChildClick}>link</button>
         <button onClick={() => turn(DIRECTIONS.RIGHT)}>girar</button>
         <span data-testid="face">{activeFace}</span>
@@ -171,9 +198,24 @@ describe("useCubeRotation · cube in the DOM", () => {
     fireEvent.pointerUp(container, { clientX: x2, clientY: y2, pointerType });
   };
 
+  const flick = (fromX: number, toX: number, durationMs: number) => {
+    const container = screen.getByTestId("container");
+    fireEvent.pointerDown(container, { button: 0, clientX: fromX, clientY: 0 });
+    const steps = 4;
+    for (let index = 1; index <= steps; index++) {
+      act(() => jest.advanceTimersByTime(durationMs / steps));
+      fireEvent.pointerMove(container, {
+        clientX: fromX + ((toX - fromX) * index) / steps,
+        clientY: 0,
+      });
+    }
+    fireEvent.pointerUp(container, { clientX: toX, clientY: 0 });
+  };
+
   beforeEach(() => {
     jest.useFakeTimers();
     onChildClick.mockClear();
+    scroll.top = 0;
     // jsdom has no layout, so the cube width is mocked.
     jest
       .spyOn(HTMLElement.prototype, "getBoundingClientRect")
@@ -229,10 +271,85 @@ describe("useCubeRotation · cube in the DOM", () => {
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.TOP);
   });
 
-  it("leaves vertical touch drags to content scrolling", () => {
-    render(<Harness />);
+  it("scrolls the face content with touch while it can still scroll", () => {
+    render(<Harness scrollable />);
+
+    drag([0, 400], [0, 100], "touch");
+    expect(scroll.top).toBe(300);
+    expect(screen.getByTestId("face")).toHaveTextContent(FACES.FRONT);
+  });
+
+  it("turns vertically with touch once the content is at the edge", () => {
+    render(<Harness scrollable />);
 
     drag([0, 100], [0, 400], "touch");
+    expect(scroll.top).toBe(0);
+    expect(screen.getByTestId("face")).toHaveTextContent(FACES.TOP);
+  });
+
+  it("turns vertically with touch when the face has nothing to scroll", () => {
+    render(<Harness />);
+
+    drag([0, 400], [0, 100], "touch");
+    expect(screen.getByTestId("face")).toHaveTextContent(FACES.BOTTOM);
+  });
+
+  it("keeps scrolling with momentum after a fast touch swipe", () => {
+    render(<Harness scrollable />);
+    const container = screen.getByTestId("container");
+
+    fireEvent.pointerDown(container, {
+      button: 0,
+      clientX: 0,
+      clientY: 400,
+      pointerType: "touch",
+    });
+    for (let index = 1; index <= 4; index++) {
+      act(() => jest.advanceTimersByTime(10));
+      fireEvent.pointerMove(container, {
+        clientX: 0,
+        clientY: 400 - index * 20,
+        pointerType: "touch",
+      });
+    }
+    fireEvent.pointerUp(container, { clientY: 320, pointerType: "touch" });
+    const released = scroll.top;
+
+    act(() => jest.advanceTimersByTime(500));
+    expect(scroll.top).toBeGreaterThan(released);
+  });
+
+  it("turns horizontally with touch", () => {
+    render(<Harness scrollable />);
+
+    drag([400, 0], [100, 0], "touch");
+    expect(screen.getByTestId("face")).toHaveTextContent(FACES.RIGHT);
+  });
+
+  it("goes back to the same face when the browser cancels the gesture", () => {
+    render(<Harness />);
+    const container = screen.getByTestId("container");
+
+    fireEvent.pointerDown(container, { button: 0, clientX: 400, clientY: 0 });
+    fireEvent.pointerMove(container, { clientX: 100, clientY: 0 });
+    fireEvent.pointerCancel(container, { clientX: 100, clientY: 0 });
+
+    expect(screen.getByTestId("face")).toHaveTextContent(FACES.FRONT);
+    act(() => jest.runAllTimers());
+    expect(orientationOf()).toBe(IDENTITY_MATRIX3D);
+  });
+
+  it("changes face with a fast, short swipe", () => {
+    render(<Harness />);
+
+    flick(200, 170, 40);
+    expect(screen.getByTestId("face")).toHaveTextContent(FACES.RIGHT);
+  });
+
+  it("does not change face with a slow, short drag", () => {
+    render(<Harness />);
+
+    flick(200, 170, 800);
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.FRONT);
   });
 

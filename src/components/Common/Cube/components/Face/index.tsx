@@ -3,6 +3,7 @@ import { Box, Flex, Text } from "@chakra-ui/react";
 import ArrowButton from "@/components/Common/ArrowButton";
 import { DIRECTIONS } from "@/constants/directions";
 import { FACES_DATA } from "@/constants/faces";
+import { FACE_SCROLL_ATTRIBUTE } from "@/hooks/useCubeRotation/useFaceScroller";
 import { getFaceTitle } from "@/utils/faces";
 
 import { CubeFaceProps } from "./types";
@@ -63,6 +64,8 @@ const Face: React.FC<CubeFaceProps> = ({
               flex="1"
               minH="0"
               overflowY="auto"
+              overscrollBehavior="contain"
+              {...{ [FACE_SCROLL_ATTRIBUTE]: "" }}
               fontSize="max(12px, 3.1cqi)"
               lineHeight="1.45"
               css={{
