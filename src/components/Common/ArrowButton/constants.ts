@@ -10,7 +10,6 @@ import { DIRECTIONS } from "@/constants/directions";
 
 interface ArrowLayout extends FlexProps {
   icon: IconType;
-  label: string;
 }
 
 const HORIZONTAL: FlexProps = { top: "50%", height: "24", width: "12" };
@@ -25,7 +24,6 @@ export const ARROW_LAYOUT: Record<DIRECTIONS, ArrowLayout> = {
     justifyContent: "flex-end",
     pr: "1",
     icon: VscTriangleLeft,
-    label: "Girar para a seção da esquerda",
   },
   [DIRECTIONS.RIGHT]: {
     ...HORIZONTAL,
@@ -35,7 +33,6 @@ export const ARROW_LAYOUT: Record<DIRECTIONS, ArrowLayout> = {
     justifyContent: "flex-start",
     pl: "1",
     icon: VscTriangleRight,
-    label: "Girar para a seção da direita",
   },
   [DIRECTIONS.UP]: {
     ...VERTICAL,
@@ -45,7 +42,6 @@ export const ARROW_LAYOUT: Record<DIRECTIONS, ArrowLayout> = {
     justifyContent: "center",
     pb: "1",
     icon: VscTriangleUp,
-    label: "Girar para a seção de cima",
   },
   [DIRECTIONS.DOWN]: {
     ...VERTICAL,
@@ -55,6 +51,5 @@ export const ARROW_LAYOUT: Record<DIRECTIONS, ArrowLayout> = {
     justifyContent: "center",
     pt: "1",
     icon: VscTriangleDown,
-    label: "Girar para a seção de baixo",
   },
 };

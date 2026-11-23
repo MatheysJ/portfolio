@@ -1,11 +1,13 @@
 import React from "react";
 import { Flex } from "@chakra-ui/react";
+import { useDictionary } from "@/i18n";
 
 import { ARROW_LAYOUT } from "./constants";
 import { ArrowButtonProps } from "./types";
 
 const ArrowButton: React.FC<ArrowButtonProps> = ({ direction, onClick }) => {
-  const { icon: Icon, label, ...layout } = ARROW_LAYOUT[direction];
+  const { icon: Icon, ...layout } = ARROW_LAYOUT[direction];
+  const { ui } = useDictionary();
 
   return (
     <Flex
@@ -23,7 +25,7 @@ const ArrowButton: React.FC<ArrowButtonProps> = ({ direction, onClick }) => {
         outline: "2px solid",
         outlineColor: "teal.400",
       }}
-      aria-label={label}
+      aria-label={ui.turn[direction]}
       onClick={() => onClick(direction)}
       {...layout}
     >

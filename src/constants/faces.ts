@@ -8,17 +8,16 @@ export enum FACES {
 }
 
 interface FaceData {
-  label: string;
   slug: string;
 }
 
 export const FACES_DATA: Record<FACES, FaceData> = {
-  [FACES.FRONT]: { label: "Início", slug: "inicio" },
-  [FACES.RIGHT]: { label: "Experiência", slug: "experiencia" },
-  [FACES.BACK]: { label: "Stack", slug: "stack" },
-  [FACES.LEFT]: { label: "Contato", slug: "contato" },
-  [FACES.TOP]: { label: "Projetos", slug: "projetos" },
-  [FACES.BOTTOM]: { label: "Formação", slug: "formacao" },
+  [FACES.FRONT]: { slug: "inicio" },
+  [FACES.RIGHT]: { slug: "experiencia" },
+  [FACES.BACK]: { slug: "stack" },
+  [FACES.LEFT]: { slug: "contato" },
+  [FACES.TOP]: { slug: "projetos" },
+  [FACES.BOTTOM]: { slug: "formacao" },
 };
 
 export const FACE_ORDER = [

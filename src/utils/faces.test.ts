@@ -17,7 +17,7 @@ describe("utils/faces", () => {
   });
 
   it("uses the uppercased section name as the title", () => {
-    expect(getFaceTitle(FACES.BOTTOM)).toBe("FORMAÇÃO");
-    expect(getFaceTitle(FACES.RIGHT)).toBe("EXPERIÊNCIA");
+    expect(getFaceTitle("Formação", "pt-BR")).toBe("FORMAÇÃO");
+    expect(getFaceTitle("Experience", "en")).toBe("EXPERIENCE");
   });
 });

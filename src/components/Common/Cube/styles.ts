@@ -13,7 +13,9 @@ export const Container = styled.div`
   height: ${CUBE_SIZE};
   perspective: calc(${CUBE_SIZE} * 3);
   cursor: grab;
-  touch-action: pan-y;
+  /* Every swipe is handled in JS (see useCubeDrag); pinch zoom stays native where supported. */
+  touch-action: none;
+  touch-action: pinch-zoom;
 
   &[data-dragging="true"] {
     cursor: grabbing;

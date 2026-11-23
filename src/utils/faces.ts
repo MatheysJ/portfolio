@@ -8,5 +8,5 @@ export const getFaceBySlug = (slug: string): FACES | undefined =>
 export const getFaceHash = (face: FACES) =>
   face === FACES.FRONT ? "" : `#${FACES_DATA[face].slug}`;
 
-export const getFaceTitle = (face: FACES) =>
-  FACES_DATA[face].label.toLocaleUpperCase("pt-BR");
+export const getFaceTitle = (label: string, locale: string) =>
+  label.toLocaleUpperCase(locale);
