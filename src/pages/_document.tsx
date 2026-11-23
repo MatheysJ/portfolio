@@ -1,14 +1,22 @@
 import Document, {
   DocumentContext,
+  DocumentInitialProps,
   Head,
   Html,
   Main,
   NextScript,
 } from "next/document";
 import { ServerStyleSheet } from "styled-components";
+import { LOCALE_PARAM, Locale, parseLocale } from "@/i18n";
 
-export default class AppDocument extends Document {
-  static async getInitialProps(ctx: DocumentContext) {
+interface AppDocumentProps extends DocumentInitialProps {
+  locale: Locale;
+}
+
+export default class AppDocument extends Document<AppDocumentProps> {
+  static async getInitialProps(
+    ctx: DocumentContext,
+  ): Promise<AppDocumentProps> {
     const sheet = new ServerStyleSheet();
     const originalRenderPage = ctx.renderPage;
 
@@ -22,6 +30,7 @@ export default class AppDocument extends Document {
       const initialProps = await Document.getInitialProps(ctx);
       return {
         ...initialProps,
+        locale: parseLocale(ctx.query[LOCALE_PARAM]),
         styles: [initialProps.styles, sheet.getStyleElement()],
       };
     } finally {
@@ -31,7 +40,7 @@ export default class AppDocument extends Document {
 
   render() {
     return (
-      <Html lang="pt-BR" suppressHydrationWarning>
+      <Html lang={this.props.locale} suppressHydrationWarning>
         <Head />
         <body>
           <Main />

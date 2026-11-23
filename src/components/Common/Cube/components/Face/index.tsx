@@ -4,6 +4,7 @@ import ArrowButton from "@/components/Common/ArrowButton";
 import { DIRECTIONS } from "@/constants/directions";
 import { FACES_DATA } from "@/constants/faces";
 import { FACE_SCROLL_ATTRIBUTE } from "@/hooks/useCubeRotation/useFaceScroller";
+import { useDictionary, useLocale } from "@/i18n";
 import { getFaceTitle } from "@/utils/faces";
 
 import { CubeFaceProps } from "./types";
@@ -20,10 +21,12 @@ const Face: React.FC<CubeFaceProps> = ({
   onTurn,
   isActive,
   contentAngle = 0,
-  title = getFaceTitle(face),
+  title,
   titleAs = "h2",
 }) => {
-  const { label, slug } = FACES_DATA[face];
+  const locale = useLocale();
+  const label = useDictionary().faces[face];
+  const { slug } = FACES_DATA[face];
 
   return (
     <FaceContext.Provider value={{ isActive }}>
@@ -57,7 +60,7 @@ const Face: React.FC<CubeFaceProps> = ({
               lineHeight="1"
               letterSpacing="tight"
             >
-              {title}
+              {title ?? getFaceTitle(label, locale)}
             </Text>
             <Flex
               direction="column"

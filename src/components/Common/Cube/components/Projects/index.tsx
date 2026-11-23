@@ -1,7 +1,8 @@
 import React from "react";
 import { Flex, Text } from "@chakra-ui/react";
 import Chip from "@/components/Common/Chip";
-import { PERSONAL_PROJECT } from "@/constants/content";
+import { PERSONAL_PROJECT_LINK } from "@/constants/contact";
+import { useDictionary } from "@/i18n";
 
 import Face from "../Face";
 import { CubeFaceContentProps } from "../Face/types";
@@ -9,7 +10,9 @@ import FaceLink from "../FaceLink";
 import SectionLabel from "../SectionLabel";
 
 const Projects: React.FC<CubeFaceContentProps> = (props) => {
-  const { title, description, stack, recognition, link } = PERSONAL_PROJECT;
+  const { title, tag, description, stack, recognition, codeLabel } =
+    useDictionary().personalProject;
+  const link = PERSONAL_PROJECT_LINK;
 
   return (
     <Face {...props}>
@@ -18,7 +21,7 @@ const Projects: React.FC<CubeFaceContentProps> = (props) => {
           <Text color="teal.400">
             {title}{" "}
             <Text as="span" color="whiteAlpha.600">
-              · projeto pessoal
+              · {tag}
             </Text>
           </Text>
           <Text>{description}</Text>
@@ -33,7 +36,7 @@ const Projects: React.FC<CubeFaceContentProps> = (props) => {
         <Text color="whiteAlpha.800">{recognition}</Text>
 
         <Flex direction="column">
-          <SectionLabel>Código (gateway)</SectionLabel>
+          <SectionLabel>{codeLabel}</SectionLabel>
           <FaceLink href={link.href}>{link.label}</FaceLink>
         </Flex>
       </Flex>

@@ -4,31 +4,32 @@ import { FaGithubAlt, FaLinkedin } from "react-icons/fa";
 import { IoMailOpen } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import { Tooltip } from "@/components/ui/tooltip";
-import { CONTACT } from "@/constants/content";
+import { CONTACT } from "@/constants/contact";
+import { Dictionary, useDictionary } from "@/i18n";
 
 import { useFaceFocus } from "../../../Face/context";
 
-const EXTERNAL_PROFILES = [
+const getExternalProfiles = (ui: Dictionary["ui"]) => [
   {
     label: "GitHub",
-    tooltip: "Ver meus projetos no GitHub",
+    tooltip: ui.githubTooltip,
     href: CONTACT.github.href,
     icon: FaGithubAlt,
   },
   {
     label: "LinkedIn",
-    tooltip: "Ir para o meu LinkedIn",
+    tooltip: ui.linkedinTooltip,
     href: CONTACT.linkedin.href,
     icon: FaLinkedin,
   },
 ];
 
 // Falls back to the mail client when the clipboard is unavailable.
-const copyEmail = async () => {
+const copyEmail = async (successMessage: string) => {
   try {
     await navigator.clipboard.writeText(CONTACT.email);
     toaster.create({
-      title: "E-mail copiado!",
+      title: successMessage,
       type: "success",
       duration: 2500,
     });
@@ -39,10 +40,11 @@ const copyEmail = async () => {
 
 const ContactActions: React.FC = () => {
   const focus = useFaceFocus();
+  const { ui } = useDictionary();
 
   return (
     <Flex gap="4" justifyContent="center">
-      {EXTERNAL_PROFILES.map(({ label, tooltip, href, icon: Icon }) => (
+      {getExternalProfiles(ui).map(({ label, tooltip, href, icon: Icon }) => (
         <Tooltip key={label} content={tooltip}>
           <IconButton asChild size="xl" colorPalette="teal" aria-label={label}>
             <Link {...focus} href={href} target="_blank" rel="noreferrer">
@@ -51,13 +53,13 @@ const ContactActions: React.FC = () => {
           </IconButton>
         </Tooltip>
       ))}
-      <Tooltip content="Copiar meu e-mail">
+      <Tooltip content={ui.copyEmailTooltip}>
         <IconButton
           {...focus}
           size="xl"
           colorPalette="teal"
-          aria-label="Copiar e-mail para a área de transferência"
-          onClick={copyEmail}
+          aria-label={ui.copyEmailLabel}
+          onClick={() => copyEmail(ui.emailCopied)}
         >
           <IoMailOpen />
         </IconButton>
