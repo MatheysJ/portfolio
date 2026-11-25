@@ -6,6 +6,12 @@ export const DEFAULT_LOCALE: Locale = "pt-BR";
 
 export const LOCALE_PARAM = "lang";
 
+export const LOCALE_OPTIONS: Record<Locale, { short: string; name: string }> =
+  {
+    "pt-BR": { short: "PT", name: "Português" },
+    en: { short: "EN", name: "English" },
+  };
+
 export const OG_LOCALES: Record<Locale, string> = {
   "pt-BR": "pt_BR",
   en: "en_US",

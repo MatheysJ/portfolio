@@ -147,6 +147,7 @@ const pt = {
   ui: {
     interactionHint: "Arraste, use as setas do teclado ou clique nas bordas",
     sectionsNav: "Seções",
+    languageNav: "Idioma",
     turn: {
       [DIRECTIONS.LEFT]: "Girar para a seção da esquerda",
       [DIRECTIONS.RIGHT]: "Girar para a seção da direita",

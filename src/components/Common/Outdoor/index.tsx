@@ -4,25 +4,29 @@ import { useCubeRotation, useHashNavigation } from "@/hooks";
 
 import Cube from "../Cube";
 import CubeNav from "../CubeNav";
+import LocaleSwitcher from "../LocaleSwitcher";
 
 const Outdoor: React.FC = () => {
   const rotation = useCubeRotation();
   useHashNavigation(rotation.activeFace, rotation.goTo);
 
   return (
-    <Flex
-      as="main"
-      minH="100dvh"
-      direction="column"
-      alignItems="center"
-      justifyContent="center"
-      gap="10"
-      px="4"
-      py="8"
-    >
-      <Cube color="white" rotation={rotation} />
-      <CubeNav activeFace={rotation.activeFace} onSelect={rotation.goTo} />
-    </Flex>
+    <>
+      <LocaleSwitcher />
+      <Flex
+        as="main"
+        minH="100dvh"
+        direction="column"
+        alignItems="center"
+        justifyContent="center"
+        gap="10"
+        px="4"
+        py="8"
+      >
+        <Cube color="white" rotation={rotation} />
+        <CubeNav activeFace={rotation.activeFace} onSelect={rotation.goTo} />
+      </Flex>
+    </>
   );
 };
 
