@@ -4,7 +4,7 @@
 
 Portfólio pessoal em uma única página: um cubo 3D com uma seção do currículo em cada face (Início, Experiência, Projetos, Stack, Formação e Contato). O cubo pode ser girado arrastando, pelas setas do teclado, pelas setas nas bordas de cada face ou pela navegação abaixo dele. Cada face tem uma URL própria (`#experiencia`, `#contato`…).
 
-![Imagem da aplicação rodando](.github\assets\running-website.avif)
+![Imagem da aplicação rodando](.github/assets/running-website.webp)
 
 ## Stack
 
