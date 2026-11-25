@@ -4,6 +4,7 @@ import { useCubeRotation, useHashNavigation } from "@/hooks";
 
 import Cube from "../Cube";
 import CubeNav from "../CubeNav";
+import Embers from "../Embers";
 import LocaleSwitcher from "../LocaleSwitcher";
 
 const Outdoor: React.FC = () => {
@@ -12,9 +13,12 @@ const Outdoor: React.FC = () => {
 
   return (
     <>
+      <Embers />
       <LocaleSwitcher />
       <Flex
         as="main"
+        position="relative"
+        zIndex="1"
         minH="100dvh"
         direction="column"
         alignItems="center"
