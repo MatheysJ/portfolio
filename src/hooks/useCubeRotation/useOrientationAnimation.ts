@@ -8,6 +8,7 @@ import {
   Matrix,
   Quaternion,
   fromQuaternion,
+  multiply,
   slerp,
   toMatrix3d,
   toQuaternion,
@@ -20,14 +21,32 @@ export interface AnimateOptions {
 const useOrientationAnimation = () => {
   const cubeRef = useRef<HTMLDivElement>(null);
   const shownRef = useRef<Quaternion>(toQuaternion(IDENTITY));
+  const shownMatrixRef = useRef<Matrix>(IDENTITY);
+  const tiltRef = useRef<Matrix>(IDENTITY);
   const frameRef = useRef<number | null>(null);
+
+  const render = useCallback(() => {
+    cubeRef.current?.style.setProperty(
+      ORIENTATION_VAR,
+      toMatrix3d(multiply(tiltRef.current, shownMatrixRef.current)),
+    );
+  }, []);
 
   const show = useCallback(
     (quaternion: Quaternion, matrix: Matrix = fromQuaternion(quaternion)) => {
       shownRef.current = quaternion;
-      cubeRef.current?.style.setProperty(ORIENTATION_VAR, toMatrix3d(matrix));
+      shownMatrixRef.current = matrix;
+      render();
     },
-    [],
+    [render],
+  );
+
+  const tilt = useCallback(
+    (matrix: Matrix) => {
+      tiltRef.current = matrix;
+      if (frameRef.current === null) render();
+    },
+    [render],
   );
 
   const stop = useCallback(() => {
@@ -71,7 +90,7 @@ const useOrientationAnimation = () => {
 
   useEffect(() => stop, [stop]);
 
-  return { cubeRef, show, stop, animateTo };
+  return { cubeRef, show, stop, animateTo, tilt };
 };
 
 export default useOrientationAnimation;
