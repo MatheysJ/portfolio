@@ -9,3 +9,6 @@ export const VELOCITY_WINDOW_MS = 100;
 export const VELOCITY_MIN_SPAN_MS = 16;
 export const MOMENTUM_FRICTION_PER_FRAME = 0.95;
 export const MOMENTUM_MIN_VELOCITY_PX_MS = 0.02;
+export const TILT_MAX_DEG = 3;
+export const TILT_SMOOTHING_MS = 180;
+export const TILT_REST_DEG = 0.01;
