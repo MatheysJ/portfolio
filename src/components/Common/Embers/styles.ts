@@ -2,7 +2,6 @@ import styled, { css, keyframes } from "styled-components";
 
 const MOBILE_LIMIT = 14;
 
-// Fixed keyframes (no var()) keep the animation eligible for compositor-only playback.
 const rise = (drift: string) => keyframes`
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg);

@@ -2,11 +2,18 @@ import React from "react";
 import { Button, Flex } from "@chakra-ui/react";
 import { FACES_DATA, FACE_ORDER } from "@/constants/faces";
 import { useDictionary } from "@/i18n";
+import { getFaceBySlug } from "@/utils/faces";
 
 import { CubeNavProps } from "./types";
 
 const CubeNav: React.FC<CubeNavProps> = ({ activeFace, onSelect }) => {
   const { faces, ui } = useDictionary();
+
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    const face = getFaceBySlug(event.currentTarget.hash.slice(1));
+    if (face) onSelect(face);
+  };
 
   return (
     <Flex
@@ -34,10 +41,7 @@ const CubeNav: React.FC<CubeNavProps> = ({ activeFace, onSelect }) => {
             <a
               href={`#${slug}`}
               aria-current={isActive ? "location" : undefined}
-              onClick={(event) => {
-                event.preventDefault();
-                onSelect(face);
-              }}
+              onClick={handleClick}
             >
               {label}
             </a>
