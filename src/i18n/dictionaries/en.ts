@@ -141,6 +141,7 @@ const en: Dictionary = {
   ui: {
     interactionHint: "Drag, use the arrow keys or click the edges",
     sectionsNav: "Sections",
+    languageNav: "Language",
     turn: {
       [DIRECTIONS.LEFT]: "Turn to the section on the left",
       [DIRECTIONS.RIGHT]: "Turn to the section on the right",

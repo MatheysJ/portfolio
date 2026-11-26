@@ -42,6 +42,8 @@ const ContactActions: React.FC = () => {
   const focus = useFaceFocus();
   const { ui } = useDictionary();
 
+  const handleClick = () => copyEmail(ui.emailCopied);
+
   return (
     <Flex gap="4" justifyContent="center">
       {getExternalProfiles(ui).map(({ label, tooltip, href, icon: Icon }) => (
@@ -59,7 +61,7 @@ const ContactActions: React.FC = () => {
           size="xl"
           colorPalette="teal"
           aria-label={ui.copyEmailLabel}
-          onClick={() => copyEmail(ui.emailCopied)}
+          onClick={handleClick}
         >
           <IoMailOpen />
         </IconButton>

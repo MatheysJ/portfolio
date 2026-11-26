@@ -9,6 +9,8 @@ const ArrowButton: React.FC<ArrowButtonProps> = ({ direction, onClick }) => {
   const { icon: Icon, ...layout } = ARROW_LAYOUT[direction];
   const { ui } = useDictionary();
 
+  const handleClick = () => onClick(direction);
+
   return (
     <Flex
       as="button"
@@ -26,7 +28,7 @@ const ArrowButton: React.FC<ArrowButtonProps> = ({ direction, onClick }) => {
         outlineColor: "teal.400",
       }}
       aria-label={ui.turn[direction]}
-      onClick={() => onClick(direction)}
+      onClick={handleClick}
       {...layout}
     >
       <Icon />
