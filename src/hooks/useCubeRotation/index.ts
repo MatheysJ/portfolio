@@ -20,6 +20,7 @@ import {
 import useArrowKeys from "../useArrowKeys";
 import useCubeDrag from "./useCubeDrag";
 import useFaceScroller from "./useFaceScroller";
+import useMouseTilt from "./useMouseTilt";
 import useOrientationAnimation, {
   AnimateOptions,
 } from "./useOrientationAnimation";
@@ -40,7 +41,7 @@ const useCubeRotation = () => {
   const orientationRef = useRef<Matrix>(IDENTITY);
   const turnTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const { cubeRef, show, stop, animateTo } = useOrientationAnimation();
+  const { cubeRef, show, stop, animateTo, tilt } = useOrientationAnimation();
 
   const straightenFaces = useCallback((targets: Matrix[]) => {
     setContentAngles((current) => {
@@ -90,6 +91,7 @@ const useCubeRotation = () => {
   );
 
   useArrowKeys(turn);
+  useMouseTilt(tilt);
 
   useEffect(() => () => clearTimeout(turnTimeoutRef.current), []);
 

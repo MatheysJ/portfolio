@@ -9,9 +9,16 @@ import {
 import { FACES } from "@/constants/faces";
 import { DIRECTIONS } from "@/constants/directions";
 import { ORIENTATION_VAR } from "@/constants/cube";
-import { IDENTITY_MATRIX3D, TURNS, toMatrix3d } from "@/utils/orientation";
+import { TILT_MAX_DEG } from "@/constants/motion";
+import {
+  IDENTITY_MATRIX3D,
+  TURNS,
+  multiply,
+  toMatrix3d,
+} from "@/utils/orientation";
 
 import useCubeRotation from ".";
+import { getTiltMatrix } from "./useMouseTilt";
 
 const SIZE = 500;
 
@@ -385,5 +392,77 @@ describe("useCubeRotation · cube in the DOM", () => {
 
     expect(onChildClick).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId("face")).toHaveTextContent(FACES.FRONT);
+  });
+
+  describe("mouse tilt", () => {
+    const RIGHT_EDGE_TILT = getTiltMatrix({ x: 0, y: TILT_MAX_DEG });
+
+    const mockPointer = (isFine: boolean) => {
+      window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+        matches: isFine && query.includes("pointer: fine"),
+      }));
+    };
+
+    const moveMouse = (clientX: number, pointerType = "mouse") => {
+      fireEvent.pointerMove(window, {
+        clientX,
+        clientY: window.innerHeight / 2,
+        pointerType,
+      });
+      act(() => jest.advanceTimersByTime(2000));
+    };
+
+    afterEach(() => {
+      delete (window as Partial<Window>).matchMedia;
+    });
+
+    it("tilts the cube slightly toward the mouse", () => {
+      mockPointer(true);
+      render(<Harness />);
+
+      moveMouse(window.innerWidth);
+      expect(orientationOf()).toBe(toMatrix3d(RIGHT_EDGE_TILT));
+    });
+
+    it("keeps the tilt on top of a turn", () => {
+      mockPointer(true);
+      render(<Harness />);
+
+      moveMouse(window.innerWidth);
+      fireEvent.click(screen.getByText("girar"));
+      act(() => jest.advanceTimersByTime(2000));
+
+      expect(orientationOf()).toBe(
+        toMatrix3d(multiply(RIGHT_EDGE_TILT, TURNS[DIRECTIONS.RIGHT])),
+      );
+      expect(screen.getByTestId("face")).toHaveTextContent(FACES.RIGHT);
+    });
+
+    it("goes back to rest when the mouse leaves the page", () => {
+      mockPointer(true);
+      render(<Harness />);
+
+      moveMouse(window.innerWidth);
+      fireEvent.pointerOut(window, { relatedTarget: null });
+      act(() => jest.advanceTimersByTime(2000));
+
+      expect(orientationOf()).toBe(IDENTITY_MATRIX3D);
+    });
+
+    it("ignores touch input", () => {
+      mockPointer(true);
+      render(<Harness />);
+
+      moveMouse(window.innerWidth, "touch");
+      expect(orientationOf()).toBe(IDENTITY_MATRIX3D);
+    });
+
+    it("stays still on devices without a fine pointer", () => {
+      mockPointer(false);
+      render(<Harness />);
+
+      moveMouse(window.innerWidth);
+      expect(orientationOf()).toBe(IDENTITY_MATRIX3D);
+    });
   });
 });
